@@ -38,7 +38,7 @@ if (defined('PAYMENT_NOTIFICATION')) {// callback
                 echo 'TRUE|'.$message;
                 die;
             } else {
-                fn_redirect('/index.php?dispatch=checkout.complete');
+                fn_order_placement_routines('route', $orderId);
             }
         }
         // only update the state if not already paid
