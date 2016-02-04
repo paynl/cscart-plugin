@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<addon scheme="2.0">
+	<id>paynl_addon</id>
+	<name>pay.nl</name>
+	<description>Pay.nl Gateway addon</description>
+	<version>1.0</version>
+	<priority>1000</priority>
+        <settings layout="separate">
+          <sections>
+              <section id="general">
+                <items>
+                  <item id="header">
+                    <type>header</type>
+                    <name>Setting</name>
+                  </item>
+                  <item id="service_id">
+                    <name>Service id</name>
+                    <type>input</type>
+                    <tooltip>The serviceid to identify your website, you can find your serviceid https://admin.pay.nl/programs/programs The serviceid should be in the following format: SL-xxxx-xxxx</tooltip>
+                  </item>
+                  <item id="token_api">
+                    <name>token </name>
+                    <type>input</type>
+                    <tooltip>The api token used to communicate with the Pay.nl API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
+                  </item>
+                </items>
+              </section>
+          </sections>
+       </settings>
+	<status>active</status>
+	<queries>
+       <item for="install">
+            CREATE TABLE `?:paynl_transactions` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `transaction_id` varchar(50) NOT NULL,
+        `option_id` int(11) NOT NULL,
+        `amount` int(11) NOT NULL,
+        `order_id` int(11) NOT NULL,
+        `status` varchar(10) NOT NULL DEFAULT 'PENDING',
+        `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `last_update` timestamp ,
+        `start_data` timestamp,
+        PRIMARY KEY (`id`)
+      ) ENGINE=myisam AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
+	</item>
+       <item for="install">DELETE FROM ?:payment_processors WHERE processor = 'Pay.nl'</item> 
+       <item for="install">
+        INSERT INTO `?:payment_processors` (`processor_id`, `processor`, `processor_script`, `processor_template`, `admin_template`, `callback`, `type`) VALUES 
+        ('', 'Pay.nl', 'paynl.php', 'views/orders/components/payments/paynl.tpl', 'paynlview.tpl', 'Y', 'P') 
+       </item>
+        <item for="uninstall">DELETE FROM ?:payments WHERE processor_id IN (SELECT processor_id FROM ?:payment_processors WHERE processor = 'Pay.nl')</item>                
+	<item for="uninstall">DELETE FROM ?:payment_processors WHERE processor = 'Pay.nl'</item> 
+	</queries>  
+</addon>

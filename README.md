@@ -1,2 +1,2 @@
-# cscart-plugin
-Pay.pn cscart 4.x Plugin
+# CScart-plugin
+Pay.nl cscart 4.x Plugin
