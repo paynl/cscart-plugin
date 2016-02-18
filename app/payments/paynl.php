@@ -44,8 +44,11 @@ if (defined('PAYMENT_NOTIFICATION')) {// callback
         // only update the state if not already paid
         if (!$alreadyPaid) {
             $statuses = $processor_data['processor_params']['statuses'];
-            fn_manageState($state, $statuses[strtolower($state)], $mode,
-                $orderId, $payNLTransactionID, $processor_data);
+            if(isset($statuses[strtolower($state)])) {
+                fn_manageState($state, $statuses[strtolower($state)], $mode,
+                    $orderId, $payNLTransactionID, $processor_data);
+            }
+            fn_order_placement_routines('route', $orderId);
         }
     }
 } else {//create the transaction
@@ -113,14 +116,15 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
 {
     switch ($state) {
         case 'PENDING':
-            if ($mode == 'exchange')
-                    echo 'TRUE| state:PENDING, orderId:'.$orderId.', transactionId:'.$payNLTransactionID.
-                ',idState:'.$idstate.', service_id:'.$processor_data['processor_params']['service_id'].
-                ',token_api:'.$processor_data['processor_params']['token_api'].
-                ',statuses:'.print_r($processor_data['processor_params']['statuses'],
-                    true);
-            ob_flush();
-            flush();
+            if ($mode == 'exchange') {
+                echo 'TRUE| state:PENDING, orderId:' . $orderId . ', transactionId:' . $payNLTransactionID .
+                    ',idState:' . $idstate . ', service_id:' . $processor_data['processor_params']['service_id'] .
+                    ',token_api:' . $processor_data['processor_params']['token_api'] .
+                    ',statuses:' . print_r($processor_data['processor_params']['statuses'],
+                        true);
+            } else {
+                fn_order_placement_routines('route', $orderId);
+            }
             die;
             break;
         case 'PAID':
@@ -131,8 +135,6 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
                 ',token_api:'.$processor_data['processor_params']['token_api'].
                 ',statuses:'.print_r($processor_data['processor_params']['statuses'],
                     true);
-                ob_flush();
-                flush();
 
                 fn_change_order_status($_REQUEST['csCartOrderId'], $idstate, '',
                     false);
@@ -142,7 +144,7 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
                 fn_change_order_status($_REQUEST['csCartOrderId'], $idstate, '',
                     false);
                 fn_updatePayTransaction($payNLTransactionID, 'PAID');
-                fn_finish_payment($orderId, $newState, true);
+                fn_finish_payment($orderId, $idstate, true);
                 fn_order_placement_routines('route', $orderId);
             }
 
@@ -155,8 +157,6 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
                 ',token_api:'.$processor_data['processor_params']['token_api'].
                 ',statuses:'.print_r($processor_data['processor_params']['statuses'],
                     true);
-                ob_flush();
-                flush();
                 fn_updatePayTransaction($payNLTransactionID, 'CANCEL');
                 die;
             } else {
@@ -174,8 +174,6 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
                 ',token_api:'.$processor_data['processor_params']['token_api'].
                 ',statuses:'.print_r($processor_data['processor_params']['statuses'],
                     true);
-                ob_flush();
-                flush();
                 fn_updatePayTransaction($payNLTransactionID, 'CHECKAMOUNT');
                 die;
             } else {
@@ -187,7 +185,7 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
             break;
 
         default:
-            $pp_response['order_status'] = $statuses[$state];
+            $pp_response['order_status'] = $processor_data['processor_params']['statuses'][$state];
             fn_updatePayTransaction($payNLTransactionID, 'PENDING');
             fn_change_order_status($orderId, $pp_response['order_status'], '',
                 false);
