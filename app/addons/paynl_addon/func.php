@@ -40,7 +40,19 @@ function fn_getPaynlOptionId($var) {
 
     return $result['paymentOptions'];
 }
-
+function fn_paynl_getInfo($payNLTransactionID, $processor_data){
+    $payApiInfo = new Pay_Api_Info();
+    $payApiInfo->setApiToken($processor_data['processor_params']['token_api']);
+    $payApiInfo->setServiceId($processor_data['processor_params']['service_id']);
+    $payApiInfo->setTransactionId($payNLTransactionID);
+    try {
+        $result = $payApiInfo->doRequest();
+    } catch (Exception $ex) {
+        fn_set_notification('E', __('error'), $ex->getMessage());
+        fn_redirect('/index.php?dispatch=checkout.checkout');
+    }
+    return $result;
+}
 function fn_paynl_getState($payNLTransactionID, $processor_data) {
     $payApiInfo = new Pay_Api_Info();
     $payApiInfo->setApiToken($processor_data['processor_params']['token_api']);
@@ -107,7 +119,6 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     if (!empty($order_info['gift_certificates'])) {
         foreach ($order_info['gift_certificates'] as $k => $v) {
             $v['amount'] = (!empty($v['extra']['exclude_from_calculate'])) ? 0 : $v['amount'];
-            $total = $total + $v['amount'] * 100;
             $payNL->addProduct($v['gift_cert_id'], $v['gift_cert_code'], (-100) * $v['amount'], 1);
         }
     }

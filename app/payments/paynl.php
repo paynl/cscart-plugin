@@ -129,6 +129,16 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
             break;
         case 'PAID':
 
+            $payData = fn_paynl_getInfo($payNLTransactionID, $processor_data);
+
+            $pp_response = array(
+                'order_status' => $idstate,
+                'naam' => $payData['paymentDetails']['identifierName'],
+                'rekening' => $payData['paymentDetails']['identifierPublic']
+            );
+
+            fn_finish_payment($orderId, $pp_response, true);
+
             if ($mode == 'exchange') {
                 echo 'TRUE| orderId='.$orderId.', transactionId='.$payNLTransactionID.
                 ',idState:'.$idstate.', service_id:'.$processor_data['processor_params']['service_id'].
@@ -144,7 +154,8 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
                 fn_change_order_status($_REQUEST['csCartOrderId'], $idstate, '',
                     false);
                 fn_updatePayTransaction($payNLTransactionID, 'PAID');
-                fn_finish_payment($orderId, $idstate, true);
+
+
                 fn_order_placement_routines('route', $orderId);
             }
 
