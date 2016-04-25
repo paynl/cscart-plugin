@@ -111,7 +111,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $payNL->setExtra1($order_id);
 
     foreach ($order_info['products'] as $key => $product) {
-        $payNL->addProduct($product['product_id'], $product['product'], floatval($product['base_price']) * 100, $product['amount'], 'H');
+        $payNL->addProduct($product['product_id'], $product['product'], floatval($product['price']) * 100, $product['amount'], 'H');
     }
 
     if (isset($order_info['subtotal_discount']) && $order_info['subtotal_discount'] > 0)
