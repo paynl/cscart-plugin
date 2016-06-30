@@ -11,7 +11,7 @@ class Pay_Api {
     protected $_action = '';
     protected $_serviceId = '';
     protected $_apiToken = '';
-    protected $_requestType = self::REQUEST_TYPE_GET;
+    protected $_requestType = self::REQUEST_TYPE_POST;
     protected $_postData = array();
 
     
