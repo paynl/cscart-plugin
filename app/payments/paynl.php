@@ -1,11 +1,10 @@
 <?php
 
 /**
- * 	Pay.nl
- * 	Date: 8-7-2014
- * 	Version: 1.0.0
+ *    Pay.nl
+ *    Date: 8-7-2014
+ *    Version: 1.0.0
  */
-use Tygh\Http;
 use Tygh\Registry;
 
 if (!defined('BOOTSTRAP')) {
@@ -14,7 +13,7 @@ if (!defined('BOOTSTRAP')) {
 
 if (defined('PAYMENT_NOTIFICATION')) {// callback
     $order_info = null;
-    $orderId    = intval($_REQUEST['csCartOrderId']);
+    $orderId = intval($_REQUEST['csCartOrderId']);
 
     if ($mode == 'exchange' || $mode == 'finish') {
         if (fn_check_payment_script('paynl.php', $orderId)) {
@@ -35,7 +34,7 @@ if (defined('PAYMENT_NOTIFICATION')) {// callback
         if ($alreadyPaid) {
             $message = 'Order  already PAID';
             if ($mode == 'exchange') {
-                echo 'TRUE|'.$message;
+                echo 'TRUE|' . $message;
                 die;
             } else {
                 fn_order_placement_routines('route', $orderId);
@@ -44,12 +43,12 @@ if (defined('PAYMENT_NOTIFICATION')) {// callback
         // only update the state if not already paid
         if (!$alreadyPaid) {
             $statuses = $processor_data['processor_params']['statuses'];
-            if(isset($statuses[strtolower($state)])) {
+            if (isset($statuses[strtolower($state)])) {
                 fn_manageState($state, $statuses[strtolower($state)], $mode,
                     $orderId, $payNLTransactionID, $processor_data);
             }
-            fn_order_placement_routines('route', $orderId);
         }
+
     }
 } else {//create the transaction
     $paymentOptionSub = null;
@@ -59,11 +58,11 @@ if (defined('PAYMENT_NOTIFICATION')) {// callback
 
     $exchangeUrl = fn_url("payment_notification.exchange?payment=paynl&csCartOrderId=$order_id",
         AREA, 'current');
-    $finishUrl   = fn_url("payment_notification.finish?payment=paynl&csCartOrderId=$order_id",
+    $finishUrl = fn_url("payment_notification.finish?payment=paynl&csCartOrderId=$order_id",
         AREA, 'current');
-    $result      = fn_paynl_startTransaction($order_id, $order_info,
+    $result = fn_paynl_startTransaction($order_id, $order_info,
         $processor_data, $exchangeUrl, $finishUrl, $paymentOptionSub);
-    $data        = array(
+    $data = array(
         'transaction_id' => $result['transaction']['transactionId'],
         'option_id' => $processor_data['processor_params']['optionId'],
         'amount' => floatval($order_info['total']) * 100, //cents
@@ -82,7 +81,7 @@ if (defined('PAYMENT_NOTIFICATION')) {// callback
     } else {
         fn_set_notification('E',
             "There was an error while processing your transaction: ", "");
-        fn_redirect(Registry::get('config.http_location')."/?dispatch=checkout.cart");
+        fn_redirect(Registry::get('config.http_location') . "/?dispatch=checkout.cart");
     }
 
     die;
@@ -90,7 +89,7 @@ if (defined('PAYMENT_NOTIFICATION')) {// callback
 
 function fn_updatePayTransaction($transactionId, $status)
 {
-    $now  = new DateTime();
+    $now = new DateTime();
     $data = array(
         'status' => $status,
         'last_update' => date('Y-m-d H:i:s')
@@ -101,7 +100,7 @@ function fn_updatePayTransaction($transactionId, $status)
 
 function fn_isAlreadyPAID($transactionID)
 {
-    $orderID         = db_get_field('SELECT order_id FROM ?:paynl_transactions WHERE transaction_id =?s',
+    $orderID = db_get_field('SELECT order_id FROM ?:paynl_transactions WHERE transaction_id =?s',
         $transactionID);
     $arrTransactions = db_get_field('SELECT count(*) FROM ?:paynl_transactions WHERE order_id =?s AND status = "PAID" ',
         $orderID);
@@ -137,25 +136,17 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
                 'rekening' => $payData['paymentDetails']['identifierPublic']
             );
 
-            fn_finish_payment($orderId, $pp_response, true);
-
             if ($mode == 'exchange') {
-                echo 'TRUE| orderId='.$orderId.', transactionId='.$payNLTransactionID.
-                ',idState:'.$idstate.', service_id:'.$processor_data['processor_params']['service_id'].
-                ',token_api:'.$processor_data['processor_params']['token_api'].
-                ',statuses:'.print_r($processor_data['processor_params']['statuses'],
-                    true);
+                echo 'TRUE| orderId=' . $orderId . ', transactionId=' . $payNLTransactionID .
+                    ',idState:' . $idstate . ', service_id:' . $processor_data['processor_params']['service_id'] .
+                    ',token_api:' . $processor_data['processor_params']['token_api'] .
+                    ',statuses:' . print_r($processor_data['processor_params']['statuses'],
+                        true);
 
-                fn_change_order_status($_REQUEST['csCartOrderId'], $idstate, '',
-                    false);
+                fn_finish_payment($orderId, $pp_response, true);
                 fn_updatePayTransaction($payNLTransactionID, 'PAID');
                 die;
             } else {
-                fn_change_order_status($_REQUEST['csCartOrderId'], $idstate, '',
-                    false);
-                fn_updatePayTransaction($payNLTransactionID, 'PAID');
-
-
                 fn_order_placement_routines('route', $orderId);
             }
 
@@ -163,11 +154,11 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
         case 'CANCEL':
 
             if ($mode == 'exchange') {
-                echo 'TRUE| CANCEL orderId='.$orderId.', transactionId='.$payNLTransactionID.
-                ',idState:'.$idstate.', service_id:'.$processor_data['processor_params']['service_id'].
-                ',token_api:'.$processor_data['processor_params']['token_api'].
-                ',statuses:'.print_r($processor_data['processor_params']['statuses'],
-                    true);
+                echo 'TRUE| CANCEL orderId=' . $orderId . ', transactionId=' . $payNLTransactionID .
+                    ',idState:' . $idstate . ', service_id:' . $processor_data['processor_params']['service_id'] .
+                    ',token_api:' . $processor_data['processor_params']['token_api'] .
+                    ',statuses:' . print_r($processor_data['processor_params']['statuses'],
+                        true);
                 fn_updatePayTransaction($payNLTransactionID, 'CANCEL');
                 die;
             } else {
@@ -180,11 +171,11 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
         case 'CHECKAMOUNT':
 
             if ($mode == 'exchange') {
-                echo 'TRUE| CHECKAMOUNT orderId='.$orderId.', transactionId='.$payNLTransactionID.
-                ',idState:'.$idstate.', service_id:'.$processor_data['processor_params']['service_id'].
-                ',token_api:'.$processor_data['processor_params']['token_api'].
-                ',statuses:'.print_r($processor_data['processor_params']['statuses'],
-                    true);
+                echo 'TRUE| CHECKAMOUNT orderId=' . $orderId . ', transactionId=' . $payNLTransactionID .
+                    ',idState:' . $idstate . ', service_id:' . $processor_data['processor_params']['service_id'] .
+                    ',token_api:' . $processor_data['processor_params']['token_api'] .
+                    ',statuses:' . print_r($processor_data['processor_params']['statuses'],
+                        true);
                 fn_updatePayTransaction($payNLTransactionID, 'CHECKAMOUNT');
                 die;
             } else {
@@ -203,4 +194,5 @@ function fn_manageState($state, $idstate, $mode, $orderId, $payNLTransactionID,
             break;
     }
 }
+
 ?>
