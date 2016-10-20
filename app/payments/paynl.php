@@ -3,7 +3,7 @@
 /**
  *    Pay.nl
  *    Date: 8-7-2014
- *    Version: 1.0.0
+ *    Version: 1.0.7
  */
 use Tygh\Registry;
 
