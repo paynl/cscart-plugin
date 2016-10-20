@@ -77,7 +77,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $payNL->setAmount(floatval($order_info['total']) * 100);
     $payNL->setPaymentOptionId($processor_data['processor_params']['optionId']);
     
-    if(!is_null($paymentOptionSubId)){
+    if(!empty($paymentOptionSubId)){
         $payNL->setPaymentOptionSubId($paymentOptionSubId);
     }
     

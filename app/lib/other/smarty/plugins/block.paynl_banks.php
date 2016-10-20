@@ -8,7 +8,7 @@ function smarty_block_paynl_banks($params, $content, &$smarty, &$repeat)
                 $banks = fn_get_ideal_banks($processor_data);
                 
                 $banksHtml = "<select name='paymentOptionbSubId' >";
-                
+                $banksHtml .= "<option value=''>Kies uw bank...</option>";
                 foreach($banks as $bank){
                     $banksHtml .= "<option value='".$bank['id']."'>".$bank['name']."</option>";
                 }
