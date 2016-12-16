@@ -128,31 +128,33 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         );
     }
 
-    if (isset($order_info['subtotal_discount']) && $order_info['subtotal_discount'] > 0)
-        $payNL->addProduct(__('discount'), __('discount'), $order_info['subtotal_discount'] * 100, 1);
-    if (!empty($order_info['gift_certificates'])) {
-        foreach ($order_info['gift_certificates'] as $k => $v) {
-            $v['amount'] = (!empty($v['extra']['exclude_from_calculate'])) ? 0 : $v['amount'];
-            $payNL->addProduct($v['gift_cert_id'], $v['gift_cert_code'], (-100) * $v['amount'], 1);
-        }
-    }
+
     $surcharge = floatval($order_info['payment_surcharge']);
     $ship = fn_order_shipping_cost($order_info);
 
     if (floatval($order_info['payment_surcharge'])) {
         $item_name = $order_info['payment_method']['surcharge_title'];
-        $payNL->addProduct(substr($item_name, 0, 24), $item_name, floatval($order_info['payment_surcharge']) * 100, 1);
+        $payNL->addProduct(substr($item_name, 0, 24), $item_name, floatval($order_info['payment_surcharge']) * 100, 1, 'H');
     }
 
     // Shipping
     $shipping_cost = floatval($order_info['shipping_cost']) * 100;
     if (isset($shipping_cost) && $shipping_cost > 0) {
-        $payNL->addProduct('shipping_cost', __('shipping_cost'), $shipping_cost, 1);
+        $payNL->addProduct('shipping_cost', __('shipping_cost'), $shipping_cost, 1, 'H');
     }
     //gift
     if (!empty($order_info['use_gift_certificates'])) {
         foreach ($order_info['use_gift_certificates'] as $k => $v) {
-            $payNL->addProduct($v['gift_cert_id'], $k, floatval($v['cost']) * (-100), 1);
+            $payNL->addProduct($v['gift_cert_id'], $k, floatval($v['cost']) * (-100), 1, 'N');
+        }
+    }
+
+    if (isset($order_info['subtotal_discount']) && $order_info['subtotal_discount'] > 0)
+        $payNL->addProduct(__('discount'), __('discount'), $order_info['subtotal_discount'] * -100, 1, 'N');
+    if (!empty($order_info['gift_certificates'])) {
+        foreach ($order_info['gift_certificates'] as $k => $v) {
+            $v['amount'] = (!empty($v['extra']['exclude_from_calculate'])) ? 0 : $v['amount'];
+            $payNL->addProduct($v['gift_cert_id'], $v['gift_cert_code'], (-100) * $v['amount'], 1, 'N');
         }
     }
 
