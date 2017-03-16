@@ -26,11 +26,6 @@ if (defined('PAYMENT_NOTIFICATION')) { // callback
 
     $idstate = $statuses[strtolower($state)];
 
-    if (fn_check_payment_script('paynl.php', $orderId) && !empty($idstate)) {
-        // set the status
-        fn_change_order_status($orderId, $idstate);
-    }
-
     if ($mode == 'finish') {
         fn_order_placement_routines('route', $orderId, false);
         die();
@@ -47,6 +42,11 @@ if (defined('PAYMENT_NOTIFICATION')) { // callback
             }
         }
 
+        if (fn_check_payment_script('paynl.php', $orderId) && !empty($idstate)) {
+            // set the status
+            fn_change_order_status($orderId, $idstate);
+        }
+        
         if (!empty($idstate)) {
             fn_updatePayTransaction($payNLTransactionID, $state);
 
