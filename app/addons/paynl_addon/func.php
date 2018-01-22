@@ -109,7 +109,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
                 'city' => $order_info['s_city'],
                 'countryCode' => $order_info['s_country']),
             'invoiceAddress' => array('initials' => $order_info['b_firstname'],
-                'lastname' => $order_info['b_lastname'],
+                'lastName' => $order_info['b_lastname'],
                 'streetName' => $b_address[0],
                 'streetNumber' => substr($b_address[1], 0, 4),
                 'zipCode' => $order_info['b_zipcode'],
