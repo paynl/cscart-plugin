@@ -46,9 +46,8 @@ if (defined('PAYMENT_NOTIFICATION')) { // callback
             // set the status
             fn_change_order_status($orderId, $idstate);
         }
-        
+
         if (!empty($idstate)) {
-            fn_updatePayTransaction($payNLTransactionID, $state);
 
             if ($state == 'PAID') {
                 $pp_response = array(
@@ -57,7 +56,22 @@ if (defined('PAYMENT_NOTIFICATION')) { // callback
                     'rekening' => $payData['paymentDetails']['identifierPublic']
                 );
 
+                $bFailed = $payData['paymentDetails']['paidCurrenyAmount'] != round($order_info['total'] * 100);
+                if($bFailed) {
+                    $idstate = 'F';
+                    $state = "FAILED";
+                    $pp_response['order_status'] = $idstate;
+                }
+
+                fn_updatePayTransaction($payNLTransactionID, $state);
                 fn_finish_payment($orderId, $pp_response);
+
+                if($bFailed && $mode == 'exchange') {
+                    $message = 'Order amount not equal to paid amount'. round($order_info['total']*100) . ' '. $payData['paymentDetails']['paidCurrenyAmount'] ;
+                    fn_finish_payment($orderId, $pp_response);
+                    die('TRUE| ' . $message);
+                }
+
             }
             die('TRUE| Updated status to: '.$state.' state_id: '.$idstate);
         }

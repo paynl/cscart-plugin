@@ -2,7 +2,7 @@
 
 class Pay_Api_Info extends Pay_Api {
 
-    protected $_version = 'v3';
+    protected $_version = 'v10';
     protected $_controller = 'transaction';
     protected $_action = 'info';
   
