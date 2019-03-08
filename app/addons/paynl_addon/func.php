@@ -28,21 +28,6 @@ function fn_get_ideal_banks($processor_data)
     }
 }
 
-function fn_getPaynlOptionId($var)
-{
-    $paynl_setting = Registry::get('addons.paynl_addon');
-    $service = new Pay_Api_Getservice();
-    $service->setApiToken($paynl_setting['token_api']);
-    $service->setServiceId($paynl_setting['service_id']);
-    try {
-        $result = $service->doRequest();
-    } catch (Exception $ex) {
-        fn_set_notification('E', __('error'), $ex->getMessage());
-        fn_redirect('/index.php?dispatch=checkout.checkout');
-    }
-
-    return $result['paymentOptions'];
-}
 
 function fn_paynl_getInfo($payNLTransactionID, $processor_data)
 {
@@ -77,7 +62,6 @@ function fn_paynl_getState($payNLTransactionID, $processor_data)
 
 function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl, $paymentOptionSubId = null)
 {
-    $paynl_setting = Registry::get('addons.paynl_addon');
     $currency = CART_PRIMARY_CURRENCY;
     $payNL = new Pay_Api_Start();
     $payNL->setApiToken($processor_data['processor_params']['token_api']);
@@ -119,28 +103,40 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $payNL->setExtra1($order_id);
 
     foreach ($order_info['products'] as $key => $product) {
+        $prices = paynl_getTaxForItem($order_info, $key);
+
+        $taxPercent = $prices['tax_amount'] / $prices['price_excl'] * 100;
+
+        $taxClass = paynl_getTaxClass($taxPercent);
+
         $payNL->addProduct(
             $product['product_id'],
             $product['product'],
-            floatval($product['price']) * 100,
+            round($prices['price_incl'] * 100),
             $product['amount'],
-            paynl_getTaxClassForItem($order_info, $key)
+            $taxClass
         );
     }
 
 
-    $surcharge = floatval($order_info['payment_surcharge']);
-    $ship = fn_order_shipping_cost($order_info);
-
-    if (floatval($order_info['payment_surcharge'])) {
+    $payment_surcharge = paynl_getTaxForSurcharge($order_info);
+    if ($payment_surcharge['price_incl'] > 0) {
         $item_name = $order_info['payment_method']['surcharge_title'];
-        $payNL->addProduct(substr($item_name, 0, 24), $item_name, floatval($order_info['payment_surcharge']) * 100, 1, 'H');
+        $taxPercent = $payment_surcharge['tax_amount'] / $payment_surcharge['price_excl'] * 100;
+
+        $taxClass = paynl_getTaxClass($taxPercent);
+
+        $payNL->addProduct(substr($item_name, 0, 24), $item_name, round($payment_surcharge['price_incl'] * 100), 1, $taxClass);
     }
 
     // Shipping
-    $shipping_cost = floatval($order_info['shipping_cost']) * 100;
-    if (isset($shipping_cost) && $shipping_cost > 0) {
-        $payNL->addProduct('shipping_cost', __('shipping_cost'), $shipping_cost, 1, 'H');
+    $shipping_cost = paynl_getTaxForShipping($order_info);
+    if ($shipping_cost['price_incl'] > 0) {
+        $taxPercent = $shipping_cost['tax_amount'] / $shipping_cost['price_excl'] * 100;
+
+        $taxClass = paynl_getTaxClass($taxPercent);
+
+        $payNL->addProduct('shipping_cost', __('shipping_cost'), round($shipping_cost['price_incl'] * 100), 1, $taxClass);
     }
     //gift
     if (!empty($order_info['use_gift_certificates'])) {
@@ -184,25 +180,125 @@ function splitAddress($strAddress)
     return array($strStreetName, $strStreetNumber);
 }
 
-function paynl_getTaxClassForItem($order_info, $item_id)
+//calculate incl and excl tax for a product
+function paynl_getTaxForItem($order_info, $item_id)
 {
+    $price = floatval($order_info['products'][$item_id]['price']);
+    $price_excl = $price;
+    $price_incl = $price;
+
     foreach ($order_info['taxes'] as $tax_rule) {
         if (
             array_key_exists($item_id, $tax_rule['applies']['items']['P']) &&
             $tax_rule['applies']['items']['P'][$item_id] === true
         ) {
-            $percentage = floatval($tax_rule['rate_value']);
-            return paynl_getTaxClass($percentage);
+            if ($tax_rule['rate_type'] == 'P') {
+                $tax_percent = (floatval($tax_rule['rate_value']) / 100);
+                if ($tax_rule['price_includes_tax'] == 'N') {
+                    // tax not inculded
+                    $tax_amount = $price * $tax_percent;
+                    $price_incl += $tax_amount;
+                } else {
+                    // tax included
+                    $tax_amount = $price / (1 + $tax_percent) * $tax_percent;
+                    $price_excl -= $tax_amount;
+                }
+            } elseif ($tax_rule['rate_type'] == 'F') {
+                $tax_amount = floatval($tax_rule['rate_value']);
+                // for some reason a fixed tax is shared between all products in the order
+                $tax_amount = $tax_amount/count($tax_rule['applies']['items']['P']);
+                if ($tax_rule['price_includes_tax'] == 'N') {
+                    $price_incl += $tax_amount;
+                } else {
+                    $price_excl -= $tax_amount;
+                }
+            }
         }
-        return null;
     }
+
+    return array(
+        'price_excl' => $price_excl,
+        'price_incl' => $price_incl,
+        'tax_amount' => $price_incl - $price_excl
+    );
+}
+
+//calculate incl and excl tax for a product
+function paynl_getTaxForShipping($order_info)
+{
+    $price = floatval($order_info['shipping_cost']);
+    $price_excl = $price;
+    $price_incl = $price;
+
+    foreach ($order_info['taxes'] as $tax_rule) {
+        if (
+            array_key_exists('S', $tax_rule['applies']) &&
+            $tax_rule['applies']['S'] > 0
+        ) {
+            if ($tax_rule['rate_type'] == 'P') {
+                $tax_percent = (floatval($tax_rule['rate_value']) / 100);
+                if ($tax_rule['price_includes_tax'] == 'N') {
+                    // tax not inculded
+                    $tax_amount = $price * $tax_percent;
+                    $price_incl += $tax_amount;
+                } else {
+                    // tax included
+                    $tax_amount = $price / (1 + $tax_percent) * $tax_percent;
+                    $price_excl -= $tax_amount;
+                }
+            } elseif ($tax_rule['rate_type'] == 'F') {
+                $tax_amount = floatval($tax_rule['rate_value']);
+                if ($tax_rule['price_includes_tax'] == 'N') {
+                    $price_incl += $tax_amount;
+                } else {
+                    $price_excl -= $tax_amount;
+                }
+            }
+        }
+    }
+
+    return array(
+        'price_excl' => $price_excl,
+        'price_incl' => $price_incl,
+        'tax_amount' => $price_incl - $price_excl
+    );
+}
+
+//calculate incl and excl tax for the payment surcharge
+function paynl_getTaxForSurcharge($order_info)
+{
+    $price = floatval($order_info['payment_surcharge']);
+    $price_excl = $price;
+    $price_incl = $price;
+
+    foreach ($order_info['taxes'] as $tax_rule) {
+        if (
+            array_key_exists('PS', $tax_rule['applies']) &&
+            $tax_rule['applies']['PS'] > 0
+        ) {
+            $tax_amount = $tax_rule['applies']['PS'];
+            if ($tax_rule['price_includes_tax'] == 'N') {
+                // tax not inculded
+                $price_incl += $tax_amount;
+            } else {
+                // tax included
+                $price_excl -= $tax_amount;
+            }
+        }
+    }
+
+    return array(
+        'price_excl' => $price_excl,
+        'price_incl' => $price_incl,
+        'tax_amount' => $price_incl - $price_excl
+    );
 }
 
 function paynl_getTaxClass($percentage)
 {
     $taxClasses = array(
         0 => 'N',
-        6 => 'L',
+        9 => 'L',
         21 => 'H'
     );
     $nearestTaxRate = paynl_nearest($percentage, array_keys($taxClasses));

@@ -5,4 +5,3 @@
  * and open the template in the editor.
  */
 if ( !defined('AREA') ) { die('Access denied'); }
-?>
