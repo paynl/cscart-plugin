@@ -207,6 +207,7 @@ function paynl_getTaxForItem($order_info, $item_id)
             $tax_rule['applies']['items']['P'][$item_id] === true
         ) {
             if ($tax_rule['rate_type'] == 'P') {
+                // tax is a percentage
                 $tax_percent = (floatval($tax_rule['rate_value']) / 100);
                 if ($tax_rule['price_includes_tax'] == 'N') {
                     // tax not inculded
@@ -218,8 +219,10 @@ function paynl_getTaxForItem($order_info, $item_id)
                     $price_excl -= $tax_amount;
                 }
             } elseif ($tax_rule['rate_type'] == 'F') {
+                // tax is fixed
                 $tax_amount = floatval($tax_rule['rate_value']);
                 // for some reason a fixed tax is shared between all products in the order
+                // so we divide the amount by the number of products this tax applies to
                 $tax_amount = $tax_amount / count($tax_rule['applies']['items']['P']);
                 if ($tax_rule['price_includes_tax'] == 'N') {
                     $price_incl += $tax_amount;
@@ -280,7 +283,7 @@ function paynl_getTaxForSurcharge($order_info)
         ) {
             $tax_amount = $tax_rule['applies']['PS'];
             if ($tax_rule['price_includes_tax'] == 'N') {
-                // tax not inculded
+                // tax not included
                 $price_incl += $tax_amount;
             } else {
                 // tax included
