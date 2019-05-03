@@ -190,6 +190,7 @@ function paynl_getTaxForItem($order_info, $item_id)
     if (array_key_exists('tax_value', $order_info['products'][$item_id]) &&
         $order_info['products'][$item_id]['tax_value'] > 0
     ) {
+        // tax setting is set to unit_price
         $tax_amount = $order_info['products'][$item_id]['tax_value'] / $order_info['products'][$item_id]['amount'];
         $price_excl -= $tax_amount;
         return array(
@@ -199,6 +200,7 @@ function paynl_getTaxForItem($order_info, $item_id)
         );
     }
 
+    // tax setting is set to subtotal
     foreach ($order_info['taxes'] as $tax_rule) {
         if (
             array_key_exists($item_id, $tax_rule['applies']['items']['P']) &&
@@ -271,6 +273,7 @@ function paynl_getTaxForSurcharge($order_info)
     $tax_amount = 0;
 
     foreach ($order_info['taxes'] as $tax_rule) {
+        // tax setting is set to subtotal
         if (
             array_key_exists('PS', $tax_rule['applies']) &&
             $tax_rule['applies']['PS'] > 0
@@ -284,6 +287,7 @@ function paynl_getTaxForSurcharge($order_info)
                 $price_excl -= $tax_amount;
             }
         } else {
+            // tax setting is set to unit price
             foreach ($tax_rule['applies'] as $key => $applies) {
                 if (substr($key, 0, 2) == "PS" && is_float($applies)) {
                     $tax_amount += $applies;
