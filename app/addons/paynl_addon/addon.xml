@@ -3,7 +3,7 @@
 	<id>paynl_addon</id>
 	<name>pay.nl</name>
 	<description>Pay.nl Gateway addon</description>
-	<version>1.0.12</version>
+	<version>1.1.0</version>
 	<priority>1000</priority>
         <settings layout="separate">
           <sections>

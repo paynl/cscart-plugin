@@ -183,9 +183,21 @@ function splitAddress($strAddress)
 //calculate incl and excl tax for a product
 function paynl_getTaxForItem($order_info, $item_id)
 {
-    $price = floatval($order_info['products'][$item_id]['price']);
+    $price = floatval($order_info['products'][$item_id]['subtotal'])/$order_info['products'][$item_id]['amount'];
     $price_excl = $price;
     $price_incl = $price;
+
+    if(array_key_exists('tax_value', $order_info['products'][$item_id]) &&
+        $order_info['products'][$item_id]['tax_value'] > 0
+    ){
+        $tax_amount = $order_info['products'][$item_id]['tax_value']/$order_info['products'][$item_id]['amount'];
+        $price_excl -= $tax_amount;
+        return array(
+            'price_excl' => $price_excl,
+            'price_incl' => $price_incl,
+            'tax_amount' => $tax_amount
+        );
+    }
 
     foreach ($order_info['taxes'] as $tax_rule) {
         if (
@@ -230,6 +242,22 @@ function paynl_getTaxForShipping($order_info)
     $price_excl = $price;
     $price_incl = $price;
 
+    if(array_key_exists('shipping', $order_info)){
+        $tax_amount = 0;
+        foreach($order_info['shipping'] as $shipping){
+            foreach($shipping['taxes'] as $tax_rule){
+                $tax_amount += $tax_rule['tax_subtotal'];
+            }
+        }
+        $price_excl = $price_incl-$tax_amount;
+
+        return array(
+            'price_excl' => $price_excl,
+            'price_incl' => $price_incl,
+            'tax_amount' => $tax_amount
+        );
+    }
+
     foreach ($order_info['taxes'] as $tax_rule) {
         if (
             array_key_exists('S', $tax_rule['applies']) &&
@@ -270,6 +298,7 @@ function paynl_getTaxForSurcharge($order_info)
     $price = floatval($order_info['payment_surcharge']);
     $price_excl = $price;
     $price_incl = $price;
+    $tax_amount = 0;
 
     foreach ($order_info['taxes'] as $tax_rule) {
         if (
@@ -283,6 +312,13 @@ function paynl_getTaxForSurcharge($order_info)
             } else {
                 // tax included
                 $price_excl -= $tax_amount;
+            }
+        } else{
+            foreach($tax_rule['applies'] as $key => $applies){
+                if(substr($key, 0,2) == "PS" && is_float($applies)){
+                    $tax_amount += $applies;
+                    $price_excl -= $applies;
+                }
             }
         }
     }
