@@ -183,14 +183,14 @@ function splitAddress($strAddress)
 //calculate incl and excl tax for a product
 function paynl_getTaxForItem($order_info, $item_id)
 {
-    $price = floatval($order_info['products'][$item_id]['subtotal'])/$order_info['products'][$item_id]['amount'];
+    $price = floatval($order_info['products'][$item_id]['subtotal']) / $order_info['products'][$item_id]['amount'];
     $price_excl = $price;
     $price_incl = $price;
 
-    if(array_key_exists('tax_value', $order_info['products'][$item_id]) &&
+    if (array_key_exists('tax_value', $order_info['products'][$item_id]) &&
         $order_info['products'][$item_id]['tax_value'] > 0
-    ){
-        $tax_amount = $order_info['products'][$item_id]['tax_value']/$order_info['products'][$item_id]['amount'];
+    ) {
+        $tax_amount = $order_info['products'][$item_id]['tax_value'] / $order_info['products'][$item_id]['amount'];
         $price_excl -= $tax_amount;
         return array(
             'price_excl' => $price_excl,
@@ -218,7 +218,7 @@ function paynl_getTaxForItem($order_info, $item_id)
             } elseif ($tax_rule['rate_type'] == 'F') {
                 $tax_amount = floatval($tax_rule['rate_value']);
                 // for some reason a fixed tax is shared between all products in the order
-                $tax_amount = $tax_amount/count($tax_rule['applies']['items']['P']);
+                $tax_amount = $tax_amount / count($tax_rule['applies']['items']['P']);
                 if ($tax_rule['price_includes_tax'] == 'N') {
                     $price_incl += $tax_amount;
                 } else {
@@ -238,18 +238,23 @@ function paynl_getTaxForItem($order_info, $item_id)
 //calculate incl and excl tax for a product
 function paynl_getTaxForShipping($order_info)
 {
-    $price = floatval($order_info['shipping_cost']);
-    $price_excl = $price;
-    $price_incl = $price;
+    if (array_key_exists('shipping', $order_info)) {
+        $price_incl = 0;
+        $price_excl = 0;
 
-    if(array_key_exists('shipping', $order_info)){
         $tax_amount = 0;
-        foreach($order_info['shipping'] as $shipping){
-            foreach($shipping['taxes'] as $tax_rule){
+        foreach ($order_info['shipping'] as $shipping) {
+            $price_incl += $shipping['rate'];
+            $price_excl += $shipping['rate'];
+            foreach ($shipping['taxes'] as $tax_rule) {
                 $tax_amount += $tax_rule['tax_subtotal'];
+                if ($tax_rule['price_includes_tax'] == 'Y') {
+                    $price_excl -= $tax_rule['tax_subtotal'];
+                } else {
+                    $price_incl += $tax_rule['tax_subtotal'];
+                }
             }
         }
-        $price_excl = $price_incl-$tax_amount;
 
         return array(
             'price_excl' => $price_excl,
@@ -257,47 +262,12 @@ function paynl_getTaxForShipping($order_info)
             'tax_amount' => $tax_amount
         );
     }
-
-    foreach ($order_info['taxes'] as $tax_rule) {
-        if (
-            array_key_exists('S', $tax_rule['applies']) &&
-            $tax_rule['applies']['S'] > 0
-        ) {
-            if ($tax_rule['rate_type'] == 'P') {
-                $tax_percent = (floatval($tax_rule['rate_value']) / 100);
-                if ($tax_rule['price_includes_tax'] == 'N') {
-                    // tax not inculded
-                    $tax_amount = $price * $tax_percent;
-                    $price_incl += $tax_amount;
-                } else {
-                    // tax included
-                    $tax_amount = $price / (1 + $tax_percent) * $tax_percent;
-                    $price_excl -= $tax_amount;
-                }
-            } elseif ($tax_rule['rate_type'] == 'F') {
-                $tax_amount = floatval($tax_rule['rate_value']);
-                if ($tax_rule['price_includes_tax'] == 'N') {
-                    $price_incl += $tax_amount;
-                } else {
-                    $price_excl -= $tax_amount;
-                }
-            }
-        }
-    }
-
-    return array(
-        'price_excl' => $price_excl,
-        'price_incl' => $price_incl,
-        'tax_amount' => $price_incl - $price_excl
-    );
 }
 
 //calculate incl and excl tax for the payment surcharge
 function paynl_getTaxForSurcharge($order_info)
 {
-    $price = floatval($order_info['payment_surcharge']);
-    $price_excl = $price;
-    $price_incl = $price;
+    $price_excl = $price_incl = floatval($order_info['payment_surcharge']);
     $tax_amount = 0;
 
     foreach ($order_info['taxes'] as $tax_rule) {
@@ -313,11 +283,15 @@ function paynl_getTaxForSurcharge($order_info)
                 // tax included
                 $price_excl -= $tax_amount;
             }
-        } else{
-            foreach($tax_rule['applies'] as $key => $applies){
-                if(substr($key, 0,2) == "PS" && is_float($applies)){
+        } else {
+            foreach ($tax_rule['applies'] as $key => $applies) {
+                if (substr($key, 0, 2) == "PS" && is_float($applies)) {
                     $tax_amount += $applies;
-                    $price_excl -= $applies;
+                    if ($tax_rule['price_includes_tax'] == 'N') {
+                        $price_incl += $applies;
+                    } else {
+                        $price_excl -= $applies;
+                    }
                 }
             }
         }
