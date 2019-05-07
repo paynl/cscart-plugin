@@ -251,12 +251,14 @@ function paynl_getTaxForShipping($order_info)
         foreach ($order_info['shipping'] as $shipping) {
             $price_incl += $shipping['rate'];
             $price_excl += $shipping['rate'];
-            foreach ($shipping['taxes'] as $tax_rule) {
-                $tax_amount += $tax_rule['tax_subtotal'];
-                if ($tax_rule['price_includes_tax'] == 'Y') {
-                    $price_excl -= $tax_rule['tax_subtotal'];
-                } else {
-                    $price_incl += $tax_rule['tax_subtotal'];
+            if (array_key_exists('taxes', $shipping) && $shipping['taxes'] != false) {
+                foreach ($shipping['taxes'] as $tax_rule) {
+                    $tax_amount += $tax_rule['tax_subtotal'];
+                    if ($tax_rule['price_includes_tax'] == 'Y') {
+                        $price_excl -= $tax_rule['tax_subtotal'];
+                    } else {
+                        $price_incl += $tax_rule['tax_subtotal'];
+                    }
                 }
             }
         }
