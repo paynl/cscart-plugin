@@ -12,7 +12,8 @@ class Pay_Api_Start extends Pay_Api {
     private $_paymentOptionId;
     private $_paymentOptionSubId;
     private $_finishUrl;
-  
+    private $_ipAddress;
+
     private $_exchangeUrl;
     private $_description;
     private $_enduser;
@@ -170,7 +171,10 @@ class Pay_Api_Start extends Pay_Api {
         $this->_exchangeUrl = $exchangeUrl;
     }
 
-  
+  public function setIpAddress($ip)
+  {
+    $this->_ipAddress = $ip;
+  }
 
     public function setExtra1($extra1) {
         $this->_extra1 = $extra1;
@@ -200,7 +204,8 @@ class Pay_Api_Start extends Pay_Api {
      * @return array
      * @throws Pay_Exception
      */
-    protected function _getPostData() {
+    protected function _getPostData()
+    {
         $data = parent::_getPostData();
 
         if ($this->_apiToken == '') {
@@ -242,7 +247,7 @@ class Pay_Api_Start extends Pay_Api {
         }
 
         
-        $data['ipAddress'] = $_SERVER['REMOTE_ADDR'];
+        $data['ipAddress'] = empty($this->_ipAddress) ? $_SERVER['REMOTE_ADDR'] : $this->_ipAddress;
         
         // I set the browser data with dummydata, because most servers dont have the get_browser function available
         $data['browserData'] = array(

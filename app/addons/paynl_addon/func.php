@@ -102,6 +102,8 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     );
     $payNL->setExtra1($order_id);
 
+    $payNL->setIpAddress($order_info['ip_address']);
+
     foreach ($order_info['products'] as $key => $product) {
         $prices = paynl_getTaxForItem($order_info, $key);
 
