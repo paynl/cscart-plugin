@@ -247,7 +247,7 @@ class Pay_Api_Start extends Pay_Api {
         }
 
         
-        $data['ipAddress'] = $this->_ipaddress;
+        $data['ipAddress'] = empty($this->_ipaddress) ? $_SERVER['REMOTE_ADDR'] : $this->_ipaddress;
         
         // I set the browser data with dummydata, because most servers dont have the get_browser function available
         $data['browserData'] = array(
