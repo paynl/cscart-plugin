@@ -14,26 +14,25 @@ if (!defined('BOOTSTRAP')) {
 if (defined('PAYMENT_NOTIFICATION')) { // callback
     $order_info = null;
     $orderId = intval($_REQUEST['csCartOrderId']);
-    $order_info = fn_get_order_info($orderId, true);
 
+    if ($mode == 'finish') {
+      fn_order_placement_routines('route', $orderId, false);
+      die();
+    }
+
+    $order_info = fn_get_order_info($orderId, true);
     $payNLTransactionID = $mode == 'exchange' ? $_REQUEST['order_id'] : $_REQUEST['orderId'];
 
     $processor_data = fn_get_processor_data($order_info['payment_id']);
-    $state = fn_paynl_getState($payNLTransactionID, $processor_data);
     $statuses = $processor_data['processor_params']['statuses'];
 
-    $payData = fn_paynl_getInfo($payNLTransactionID, $processor_data);
-
+    # Retrieve payment state from Pay.nl.
+    $state = fn_paynl_getState($payNLTransactionID, $processor_data);
     $idstate = $statuses[strtolower($state)];
-
-    if ($mode == 'finish') {
-        fn_order_placement_routines('route', $orderId, false);
-        die();
-    }
 
     if ($mode == 'exchange') {
 
-        $alreadyPaid = fn_isAlreadyPAID($payNLTransactionID);
+        $alreadyPaid = fn_isAlreadyPAID($payNLTransactionID) || $order_info['status'] == 'P';
         if ($alreadyPaid) {
             $message = 'Order already PAID';
             if ($mode == 'exchange') {
@@ -51,6 +50,7 @@ if (defined('PAYMENT_NOTIFICATION')) { // callback
             fn_updatePayTransaction($payNLTransactionID, $state);
 
             if ($state == 'PAID') {
+                $payData = fn_paynl_getInfo($payNLTransactionID, $processor_data);
                 $pp_response = array(
                     'order_status' => $idstate,
                     'naam' => $payData['paymentDetails']['identifierName'],
