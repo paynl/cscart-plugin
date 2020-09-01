@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://www.pay.nl/uploads/1/brands/main_logo.png" />
 </p>
-<h1 align="center">Pay.nl CS-Cart plugin</h1>
+<h1 align="center">PAY. CS-Cart plugin</h1>
 
 # Description
 
