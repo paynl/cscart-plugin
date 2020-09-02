@@ -1,16 +1,19 @@
-# Pay.nl CS-Cart plugin
+<p align="center">
+  <img src="https://www.pay.nl/uploads/1/brands/main_logo.png" />
+</p>
+<h1 align="center">PAY. CS-Cart plugin</h1>
 
----
-- [Summary](#summary)
-- [Quickstart](#quickstart)
-- [Setup](#setup)
+# Description
 
----
-### Summary
+With the PAY. plugin you can easily add different payment methods to your CS-Cart webshop. You can go to https://www.pay.nl (Dutch) for an overview of all our features and services, you can also visit https://docs.pay.nl/plugins#cs-cart for more documentation of our plugin.
 
-With this plug-in by Pay.nl you can easily add all desired payment methods to your CS-Cart webshop. Please refer to https://www.pay.nl (Dutch) for an overview of all features and services. 
+- [Description](#description)
+- [Available payment methods](#available-payment-methods)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Support](#support)
 
-##### Available payment methods:
+# Available payment methods
 
 Bank Payments  | Creditcards | Gift cards & Vouchers | Pay by invoice | Others | 
 :-----------: | :-----------: | :-----------: | :-----------: | :-----------: |
@@ -24,12 +27,12 @@ Bank Transfer | Cartasi | GivaCard | SprayPay | Przelewy24 |
 | Tikkie | | YourGift | Creditclick | | 
 | | | Paysafecard |
 
+# Installation
+#### Installing
 
-### Quickstart
-
-##### Installing
-
-Download the latest .zip release and upload into *Add-ons* > *Manage add-ons* > *+*
+You can install the plugin from the CS-Cart marketplace, just search for Pay.nl and install it the plugin that way.<br/>
+Otherwise you can do it manually by downloading the latest .zip release and upload it to *Add-ons* > *Manage add-ons* > *+*.<br/>
+You can find an installation manual at https://github.com/paynl/cscart-plugin/blob/master/Installatie%20handleiding%20CS-Cart.pdf (Dutch).
 
 ##### Setup
 
@@ -38,10 +41,20 @@ Download the latest .zip release and upload into *Add-ons* > *Manage add-ons* > 
 3. Scroll down or search for Pay.nl
 4. Activate the plugin
 5. Click on the blue pay.nl link
-6. Enter the API token and serviceID (these can be found in the Pay.nl Admin Panel --> https://admin.pay.nl/programs/programs
+6. Enter the API token and serviceID (these can be found in the Pay.nl Admin Panel --> https://admin.pay.nl/programs/programs)
 7. Save the settings
 8. Go to *Administration* > *Payment methods*
 8. Enable the desired payment methods
 9. Save the settings
 
 Go to the *Manage* > *Services* tab in the Pay.nl Admin Panel to enable extra payment methods
+
+# Usage
+
+**More information on this plugin can be found on https://docs.pay.nl/plugins#cs-cart**
+
+# Support
+https://www.pay.nl
+
+Contact us: support@pay.nl
+
