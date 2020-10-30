@@ -5,7 +5,7 @@
 
 # Description
 
-With the PAY. plugin you can easily add different payment methods to your CS-Cart webshop. You can go to https://www.pay.nl (Dutch) for an overview of all our features and services, you can also visit https://docs.pay.nl/plugins#cs-cart for more documentation of our plugin.
+With the PAY. plugin you can easily add different payment methods to your CS-Cart webshop. Go to https://www.pay.nl (Dutch) for an overview of all our features and services, you can also visit https://docs.pay.nl/plugins#cs-cart for more documentation.
 
 - [Description](#description)
 - [Available payment methods](#available-payment-methods)
@@ -51,7 +51,7 @@ Go to the *Manage* > *Services* tab in the Pay.nl Admin Panel to enable extra pa
 
 # Usage
 
-**More information on this plugin can be found on https://docs.pay.nl/plugins#cs-cart**
+More information on this plugin can be found on https://docs.pay.nl/plugins#cs-cart
 
 # Support
 https://www.pay.nl
