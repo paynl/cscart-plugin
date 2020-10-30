@@ -32,7 +32,7 @@ Bank Transfer | Cartasi | GivaCard | SprayPay | Przelewy24 |
 
 You can install the plugin from the CS-Cart marketplace, just search for Pay.nl and install it the plugin that way.<br/>
 Otherwise you can do it manually by downloading the latest .zip release and upload it to *Add-ons* > *Manage add-ons* > *+*.<br/>
-You can find an installation manual at https://github.com/paynl/cscart-plugin/blob/master/Installatie%20handleiding%20CS-Cart.pdf (Dutch).
+There is also an extende installation <a href="https://github.com/paynl/cscart-plugin/blob/master/Installatie%20handleiding%20CS-Cart.pdf">manual</a> (Dutch).
 
 ##### Setup
 
