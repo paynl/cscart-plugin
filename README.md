@@ -41,7 +41,7 @@ There is also an extended installation <a href="https://github.com/paynl/cscart-
 3. Scroll down or search for Pay.nl
 4. Activate the plugin
 5. Click on the blue pay.nl link
-6. Enter the API token and serviceID (these can be found in the Pay.nl Admin Panel --> https://admin.pay.nl/programs/programs)
+6. Enter the API token and serviceID (these can be found in the <a href="https://admin.pay.nl/programs/programs">PAY. Admin Panel</a> )
 7. Save the settings
 8. Go to *Administration* > *Payment methods*
 8. Enable the desired payment methods
