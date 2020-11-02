@@ -31,7 +31,8 @@ Bank Transfer | Cartasi | GivaCard | SprayPay | Przelewy24 |
 #### Installing
 
 You can install the plugin from the CS-Cart marketplace, just search for Pay.nl and install it the plugin that way.<br/>
-Otherwise you can do it manually by downloading the latest .zip release and upload it to *Add-ons* > *Manage add-ons* > *+*.<br/>
+Otherwise you can do it manually by downloading the latest .zip release and upload it to *Add-ons* > *Manage add-ons* and click on the *+* button on the top right of the page. <br/>
+Choose for a local installation of the plugin and upload the .zip here. <br/>
 There is also an extended installation <a href="https://github.com/paynl/cscart-plugin/blob/master/Installatie%20handleiding%20CS-Cart.pdf">manual</a> (Dutch).
 
 ##### Setup
@@ -44,8 +45,14 @@ There is also an extended installation <a href="https://github.com/paynl/cscart-
 6. Enter the API token and serviceID (these can be found in the <a href="https://admin.pay.nl/programs/programs">PAY. Admin Panel</a> )
 7. Save the settings
 8. Go to *Administration* > *Payment methods*
-8. Enable the desired payment methods
-9. Save the settings
+8. On the top right of the page click on the *+* button
+9. By "Processor" choose for Pay.nl
+10. By "Payment category" choose for "Internet Payments"
+11. Click on "Configure" on the top left of the pop-up
+12. By "Option" choose the payment method you want to make available
+13. Click on "General" top left of the pop-up to return and configure the rest of the payment method.
+14. Save the settings
+15. Repeat this for every payment method you want to use
 
 Go to the *Manage* > *Services* tab in the Pay.nl Admin Panel to enable extra payment methods
 
