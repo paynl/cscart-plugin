@@ -14,7 +14,7 @@ function getPaymentProfiles(){
             url: 'https://rest-api.pay.nl/v4/Transaction/getServicePaymentOptions/jsonp/?token='+apiToken+'&serviceId='+serviceId,
             dataType: 'jsonp',
             success: function(data){
-                if(data.request.result == 1){                  
+                if(data.request.result == 1){
                     var options = "";
                     jQuery.each(data.paymentProfiles, function(key, profile){
                         options += "<option value='"+profile.id+"'>"+profile.name+"</option>";
@@ -28,7 +28,7 @@ function getPaymentProfiles(){
                 }
             }
         });
-    } 
+    }
 }
 jQuery(document).ready(function(){
     getPaymentProfiles();
@@ -42,7 +42,7 @@ jQuery(document).ready(function(){
         <input onchange="getPaymentProfiles();" type="text" name="payment_data[processor_params][service_id]" id="service_id" value="{if (isset($processor_params['service_id']))}{$processor_params['service_id']}{else}{$credential['service_id']}{/if}"  size="12">
     </div>
 </div>
-        
+
 {*Token api*}
 <div class="form-field">
     <label  for="token_api">Token:</label>
@@ -51,28 +51,28 @@ jQuery(document).ready(function(){
     </div>
 </div>
 
-        
-        
-{* Options *} 
+
+
+{* Options *}
 <div class="form-field">
         <label for="payNL_option">Option:</label>
         <select name="payment_data[processor_params][optionId]" id="payNL_option">
-                
+
         </select>
-        
+
 </div>
 
 {assign var="statuses" value=$smarty.const.STATUSES_ORDER|fn_get_simple_statuses}
-    
+
 <div class="form-field">
         <label for="payNL_cancel">CANCEL:</label>
         <select name="payment_data[processor_params][statuses][cancel]" id="payNL_cancel">
           {foreach from=$statuses item="s" key="k"}
             <option value="{$k}" {if (isset($processor_params.statuses.cancel) && $processor_params.statuses.cancel == $k) || (!isset($processor_params.statuses.cancel) && $k == 'I')}selected="selected"{/if}>{$s}</option>
           {/foreach}
-        </select>        
+        </select>
 </div>
-    
+
 <div class="form-field">
         <label for="payNL_paid">PAID:</label>
         <select name="payment_data[processor_params][statuses][paid]" id="payNL_paid">
@@ -80,9 +80,9 @@ jQuery(document).ready(function(){
                 <option value="{$k}" {if (isset($processor_params.statuses.paid) && $processor_params.statuses.paid == $k) || (!isset($processor_params.statuses.paid) && $k == 'P')}selected="selected"{/if}>{$s}</option>
                 {/foreach}
         </select>
-        
+
 </div>
-    
+
 <div class="form-field">
         <label  for="payNL_pending">PENDING:</label>
         <select name="payment_data[processor_params][statuses][pending]" id="payNL_pending">
@@ -91,7 +91,17 @@ jQuery(document).ready(function(){
           {/foreach}
         </select>
 </div>
-    
+
+<div class="form-field">
+    <label for="payNL_authorize">AUTHORIZE:</label>
+    <select name="payment_data[processor_params][statuses][authorize]" id="payNL_authorize">
+        {foreach from=$statuses item="s" key="k"}
+            <option value="{$k}"
+                    {if (isset($processor_params.statuses.authorize) && $processor_params.statuses.authorize == $k) || (!isset($processor_params.statuses.authorize) && $k == 'I')}selected="selected"{/if}>{$s}</option>
+        {/foreach}
+    </select>
+</div>
+
 <div class="form-field">
         <label  for="payNL_checkamount">CHECKAMOUNT:</label>
         <select name="payment_data[processor_params][statuses][checkamount]" id="payNL_checkamount">
