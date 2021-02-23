@@ -4,7 +4,7 @@ class Pay_Helper {
 
     /**
      * Bepaal de status aan de hand van het statusid.
-     * Over het algemeen worden allen de statussen -90(CANCEL), 20(PENDING) en 100(PAID) gebruikt
+     * Over het algemeen worden allen de statussen -90(CANCEL), 95 (AUTHORIZE), 20(PENDING) en 100(PAID) gebruikt
      * 
      * @param int $statusId
      * @return string De status
@@ -16,6 +16,8 @@ class Pay_Helper {
                 return 'CHECKAMOUNT';
             case 100:
                 return 'PAID';
+            case 95:
+                return 'AUTHORIZE';
             default:
                 if ($stateId < 0) {
                     return 'CANCEL';
