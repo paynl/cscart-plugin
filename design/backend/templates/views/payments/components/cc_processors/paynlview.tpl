@@ -1,5 +1,5 @@
 {assign var="credential" value=''|fn_getCredential }
-<h3>Pay.nl </h3>
+<h3>PAY.</h3>
 <p/>
 <script type="text/javascript">
 function getPaymentProfiles(){
