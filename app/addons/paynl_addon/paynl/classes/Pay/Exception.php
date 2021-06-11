@@ -1,4 +1,6 @@
 <?php
-class Pay_Exception extends Exception{
-    
+
+class Pay_Exception extends Exception
+{
+
 }

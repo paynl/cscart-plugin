@@ -1,12 +1,14 @@
 <?php
 
-class Pay_Api_Getservice extends Pay_Api {
+class Pay_Api_Getservice extends Pay_Api
+{
 
     protected $_version = 'v3';
     protected $_controller = 'transaction';
     protected $_action = 'getService';
 
-    protected function _getPostData() {
+    protected function _getPostData()
+    {
         $data = parent::_getPostData();
 
         // Checken of alle verplichte velden geset zijn 
@@ -22,7 +24,9 @@ class Pay_Api_Getservice extends Pay_Api {
         }
         return $data;
     }
-    protected function _processResult($arrReturn) {
+
+    protected function _processResult($arrReturn)
+    {
         if (!$arrReturn['request']['result']) {
             return $arrReturn;
         }
@@ -32,19 +36,11 @@ class Pay_Api_Getservice extends Pay_Api {
         $countryOptionList = $arrReturn['countryOptionList'];
         unset($arrReturn['countryOptionList']);
         if (isset($countryOptionList) && is_array($countryOptionList)) {
-            foreach ($countryOptionList AS $strCountrCode => $arrCountry) {
-                foreach ($arrCountry['paymentOptionList'] AS $arrPaymentProfile) {
+            foreach ($countryOptionList as $strCountrCode => $arrCountry) {
+                foreach ($arrCountry['paymentOptionList'] as $arrPaymentProfile) {
 
                     if (!isset($arrReturn['paymentOptions'][$arrPaymentProfile['id']])) {
-                        $arrReturn['paymentOptions'][$arrPaymentProfile['id']] = array(
-                            'id' => $arrPaymentProfile['id'],
-                            'name' => $arrPaymentProfile['name'],
-                            'visibleName' => $arrPaymentProfile['name'],
-                            'img' => $arrPaymentProfile['img'],
-                            'path' => $arrPaymentProfile['path'],
-                            'paymentOptionSubList' => array(),
-                            'countries' => array(),
-                        );
+                        $arrReturn['paymentOptions'][$arrPaymentProfile['id']] = array('id' => $arrPaymentProfile['id'], 'name' => $arrPaymentProfile['name'], 'visibleName' => $arrPaymentProfile['name'], 'img' => $arrPaymentProfile['img'], 'path' => $arrPaymentProfile['path'], 'paymentOptionSubList' => array(), 'countries' => array(),);
                     }
 
                     if (!empty($arrPaymentProfile['paymentOptionSubList'])) {
@@ -52,10 +48,7 @@ class Pay_Api_Getservice extends Pay_Api {
                     }
 
 
-                    $arrReturn['paymentOptions'][$arrPaymentProfile['id']]['countries'][$strCountrCode] = array(
-                        'id' => $strCountrCode,
-                        'name' => $arrCountry['visibleName'],
-                    );
+                    $arrReturn['paymentOptions'][$arrPaymentProfile['id']]['countries'][$strCountrCode] = array('id' => $strCountrCode, 'name' => $arrCountry['visibleName'],);
                 }
             }
         }

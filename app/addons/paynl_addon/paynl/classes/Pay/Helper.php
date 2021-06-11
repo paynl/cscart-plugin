@@ -1,15 +1,17 @@
 <?php
 
-class Pay_Helper {
+class Pay_Helper
+{
 
     /**
      * Bepaal de status aan de hand van het statusid.
      * Over het algemeen worden allen de statussen -90(CANCEL), 95 (AUTHORIZE), 20(PENDING) en 100(PAID) gebruikt
-     * 
+     *
      * @param int $statusId
      * @return string De status
      */
-      public static function getStateText($stateId) {
+    public static function getStateText($stateId)
+    {
         switch ($stateId) {
             case 80:
             case -51:
@@ -28,7 +30,8 @@ class Pay_Helper {
     }
 
     //remove all empty nodes in an array
-    public static function filterArrayRecursive($array) {
+    public static function filterArrayRecursive($array)
+    {
         $newArray = array();
         foreach ($array as $key => $value) {
             if (is_array($value)) {
@@ -43,10 +46,11 @@ class Pay_Helper {
 
     /**
      * Find out if the connection is secure
-     * 
+     *
      * @return boolean Secure
      */
-    public static function isSecure() {
+    public static function isSecure()
+    {
         $isSecure = false;
         if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') {
             $isSecure = true;
@@ -55,36 +59,41 @@ class Pay_Helper {
         }
         return $isSecure;
     }
-    public static function getUri(){        
-        if(self::isSecure()){
-            $uri='https://';
+
+    public static function getUri()
+    {
+        if (self::isSecure()) {
+            $uri = 'https://';
         } else {
-            $uri='http://';
+            $uri = 'http://';
         }
-        
+
         $uri .= $_SERVER['SERVER_NAME'];
-        
-        if(!empty($_SERVER['REQUEST_URI'])){
+
+        if (!empty($_SERVER['REQUEST_URI'])) {
             $uri .= $_SERVER['REQUEST_URI'];
             $uriDir = $uri;
-            if(substr($uri, -4) == '.php'){
+            if (substr($uri, -4) == '.php') {
                 $uriDir = dirname($uri);
             }
-            
-            
-            if($uriDir != 'http:' && $uriDir != 'https:'){
+
+
+            if ($uriDir != 'http:' && $uriDir != 'https:') {
                 $uri = $uriDir;
             }
         }
-        
-        return $uri.'/';
+
+        return $uri . '/';
     }
-    
-    public static function sortPaymentOptions($paymentOptions){
+
+    public static function sortPaymentOptions($paymentOptions)
+    {
         uasort($paymentOptions, 'sortPaymentOptions');
         return $paymentOptions;
-    }   
+    }
 }
-function sortPaymentOptions($a,$b){
+
+function sortPaymentOptions($a, $b)
+{
     return strcmp($a['name'], $b['name']);
 }

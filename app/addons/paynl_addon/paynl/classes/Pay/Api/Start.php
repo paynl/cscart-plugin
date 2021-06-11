@@ -1,8 +1,10 @@
 <?php
+
 /**
  * Class to use for starting a transaction
  */
-class Pay_Api_Start extends Pay_Api {
+class Pay_Api_Start extends Pay_Api
+{
 
     protected $_version = 'v3';
     protected $_controller = 'transaction';
@@ -20,39 +22,50 @@ class Pay_Api_Start extends Pay_Api {
     private $_extra1;
     private $_extra2;
     private $_extra3;
-    
+
     private $_promotorId;
     private $_info;
     private $_tool;
     private $_object;
     private $_domainId;
     private $_transferData;
-    
+
     private $_products = array();
 
-    public function setCurrency($currency){
+    public function setCurrency($currency)
+    {
         $this->_currency = strtoupper($currency);
     }
-    public function setPromotorId($promotorId){
+
+    public function setPromotorId($promotorId)
+    {
         $this->_promotorId = $promotorId;
     }
-    public function setInfo($info){
+
+    public function setInfo($info)
+    {
         $this->_info = $info;
     }
-    public function setTool($tool){
+
+    public function setTool($tool)
+    {
         $this->_tool = $tool;
     }
-    public function setObject($object){
+
+    public function setObject($object)
+    {
         $this->_object = $object;
     }
- 
-    public function setTransferData($transferData){
+
+    public function setTransferData($transferData)
+    {
         $this->_transferData = $transferData;
     }
+
     /**
      * Add a product to an order
      * Attention! This is purely an adminstrative option, the amount of the order is not modified.
-     * 
+     *
      * @param string $id
      * @param string $description
      * @param int $price
@@ -60,7 +73,8 @@ class Pay_Api_Start extends Pay_Api {
      * @param int $vatPercentage
      * @throws Pay_Exception
      */
-    public function addProduct($id, $description, $price, $quantity, $vatPercentage = 'H') {
+    public function addProduct($id, $description, $price, $quantity, $vatPercentage = 'H')
+    {
         if (!is_numeric($price)) {
             throw new Pay_Exception('Price moet numeriek zijn', 1);
         }
@@ -73,19 +87,13 @@ class Pay_Api_Start extends Pay_Api {
         //description mag maar 45 chars lang zijn
         $description = substr($description, 0, 45);
 
-        $arrProduct = array(
-            'productId' => $id,
-            'description' => $description,
-            'price' => $price,
-            'quantity' => $quantity,
-            'vatCode' => $vatPercentage,
-        );
+        $arrProduct = array('productId' => $id, 'description' => $description, 'price' => $price, 'quantity' => $quantity, 'vatCode' => $vatPercentage,);
         $this->_products[] = $arrProduct;
     }
 
     /**
      * Set the enduser data in the following format
-     * 
+     *
      * array(
      *  initals
      *  lastName
@@ -119,17 +127,19 @@ class Pay_Api_Start extends Pay_Api {
      * )
      * @param array $enduser
      */
-    public function setEnduser($enduser) {
+    public function setEnduser($enduser)
+    {
         $this->_enduser = $enduser;
     }
 
     /**
      * Set the amount(in cents) of the transaction
-     * 
+     *
      * @param int $amount
      * @throws Pay_Exception
      */
-    public function setAmount($amount) {
+    public function setAmount($amount)
+    {
         if (is_numeric($amount)) {
             $this->_amount = $amount;
         } else {
@@ -137,7 +147,8 @@ class Pay_Api_Start extends Pay_Api {
         }
     }
 
-    public function setPaymentOptionId($paymentOptionId) {
+    public function setPaymentOptionId($paymentOptionId)
+    {
         if (is_numeric($paymentOptionId)) {
             $this->_paymentOptionId = $paymentOptionId;
         } else {
@@ -145,7 +156,8 @@ class Pay_Api_Start extends Pay_Api {
         }
     }
 
-    public function setPaymentOptionSubId($paymentOptionSubId) {
+    public function setPaymentOptionSubId($paymentOptionSubId)
+    {
         if (is_numeric($paymentOptionSubId)) {
             $this->_paymentOptionSubId = $paymentOptionSubId;
         } else {
@@ -155,38 +167,46 @@ class Pay_Api_Start extends Pay_Api {
 
     /**
      * Set the url where the user will be redirected to after payment.
-     * 
+     *
      * @param string $finishUrl
      */
-    public function setFinishUrl($finishUrl) {
+    public function setFinishUrl($finishUrl)
+    {
         $this->_finishUrl = $finishUrl;
     }
 
     /**
      * Set the comunication url, the pay.nl server will call this url when the status of the transaction changes
-     * 
+     *
      * @param string $exchangeUrl
      */
-    public function setExchangeUrl($exchangeUrl) {
+    public function setExchangeUrl($exchangeUrl)
+    {
         $this->_exchangeUrl = $exchangeUrl;
     }
 
-  public function setIpAddress($ip)
-  {
-    $this->_ipAddress = $ip;
-  }
+    public function setIpAddress($ip)
+    {
+        $this->_ipAddress = $ip;
+    }
 
-    public function setExtra1($extra1) {
+    public function setExtra1($extra1)
+    {
         $this->_extra1 = $extra1;
     }
-    public function setExtra2($extra2) {
+
+    public function setExtra2($extra2)
+    {
         $this->_extra2 = $extra2;
     }
 
-    public function setExtra3($extra3) {
+    public function setExtra3($extra3)
+    {
         $this->_extra3 = $extra3;
     }
-    public function setDomainId($domainId) {
+
+    public function setDomainId($domainId)
+    {
         $this->_domainId = $domainId;
     }
 
@@ -194,13 +214,14 @@ class Pay_Api_Start extends Pay_Api {
      * Set the description for the transaction
      * @param type $description
      */
-    public function setDescription($description) {
+    public function setDescription($description)
+    {
         $this->_description = $description;
     }
 
     /**
      * Get the post data, if not all required variables are set, this wil rthrow an exception
-     * 
+     *
      * @return array
      * @throws Pay_Exception
      */
@@ -223,10 +244,10 @@ class Pay_Api_Start extends Pay_Api {
         } else {
             $data['amount'] = $this->_amount;
         }
-        if(!empty($this->_currency)){
+        if (!empty($this->_currency)) {
             $data['transaction']['currency'] = $this->_currency;
         }
-        if (!empty($this->_paymentOptionId)) {  
+        if (!empty($this->_paymentOptionId)) {
             $data['paymentOptionId'] = $this->_paymentOptionId;
         }
         if (empty($this->_finishUrl)) {
@@ -234,7 +255,7 @@ class Pay_Api_Start extends Pay_Api {
         } else {
             $data['finishUrl'] = $this->_finishUrl;
         }
-        if (!empty($this->_exchangeUrl)) {    
+        if (!empty($this->_exchangeUrl)) {
             $data['transaction']['orderExchangeUrl'] = $this->_exchangeUrl;
         }
 
@@ -246,25 +267,11 @@ class Pay_Api_Start extends Pay_Api {
             $data['paymentOptionSubId'] = $this->_paymentOptionSubId;
         }
 
-        
+
         $data['ipAddress'] = empty($this->_ipAddress) ? $_SERVER['REMOTE_ADDR'] : $this->_ipAddress;
-        
+
         // I set the browser data with dummydata, because most servers dont have the get_browser function available
-        $data['browserData'] = array(
-            'browser_name_regex' => '^mozilla/5\.0 (windows; .; windows nt 5\.1; .*rv:.*) gecko/.* firefox/0\.9.*$',
-            'browser_name_pattern' => 'Mozilla/5.0 (Windows; ?; Windows NT 5.1; *rv:*) Gecko/* Firefox/0.9*',
-            'parent' => 'Firefox 0.9',
-            'platform' => 'WinXP',
-            'browser' => 'Firefox',
-            'version' => 0.9,
-            'majorver' => 0,
-            'minorver' => 9,
-            'cssversion' => 2,
-            'frames' => 1,
-            'iframes' => 1,
-            'tables' => 1,
-            'cookies' => 1,
-        );
+        $data['browserData'] = array('browser_name_regex' => '^mozilla/5\.0 (windows; .; windows nt 5\.1; .*rv:.*) gecko/.* firefox/0\.9.*$', 'browser_name_pattern' => 'Mozilla/5.0 (Windows; ?; Windows NT 5.1; *rv:*) Gecko/* Firefox/0.9*', 'parent' => 'Firefox 0.9', 'platform' => 'WinXP', 'browser' => 'Firefox', 'version' => 0.9, 'majorver' => 0, 'minorver' => 9, 'cssversion' => 2, 'frames' => 1, 'iframes' => 1, 'tables' => 1, 'cookies' => 1,);
         if (!empty($this->_products)) {
             $data['saleData']['invoiceDate'] = date('d-m-Y');
             $data['saleData']['deliveryDate'] = date('d-m-Y', strtotime('+1 day'));
@@ -275,7 +282,7 @@ class Pay_Api_Start extends Pay_Api {
             $data['enduser'] = $this->_enduser;
         }
 
-         if (!empty($this->_extra1)) {
+        if (!empty($this->_extra1)) {
             $data['statsData']['extra1'] = $this->_extra1;
         }
         if (!empty($this->_extra2)) {
@@ -284,25 +291,25 @@ class Pay_Api_Start extends Pay_Api {
         if (!empty($this->_extra3)) {
             $data['statsData']['extra3'] = $this->_extra3;
         }
-        if(!empty($this->_promotorId)){
+        if (!empty($this->_promotorId)) {
             $data['statsData']['promotorId'] = $this->_promotorId;
         }
-        if(!empty($this->_info)){
+        if (!empty($this->_info)) {
             $data['statsData']['info'] = $this->_info;
         }
-        if(!empty($this->_tool)){
+        if (!empty($this->_tool)) {
             $data['statsData']['tool'] = $this->_tool;
         }
-        if(!empty($this->_object)){
+        if (!empty($this->_object)) {
             $data['statsData']['object'] = $this->_object;
         }
-        if(!empty($this->_domainId)){
+        if (!empty($this->_domainId)) {
             $data['statsData']['domain_id'] = $this->_domainId;
         }
-        if(!empty($this->_transferData)){
+        if (!empty($this->_transferData)) {
             $data['statsData']['transferData'] = $this->_transferData;
         }
-        
+
         return $data;
     }
 
