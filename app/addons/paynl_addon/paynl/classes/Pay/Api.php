@@ -1,6 +1,7 @@
 <?php
 
-class Pay_Api {
+class Pay_Api
+{
 
     const REQUEST_TYPE_POST = 1;
     const REQUEST_TYPE_GET = 0;
@@ -14,14 +15,15 @@ class Pay_Api {
     protected $_requestType = self::REQUEST_TYPE_POST;
     protected $_postData = array();
 
-    
+
     /**
      * Set the serviceid
      * The serviceid always starts with SL- and can be found on: https://admin.pay.nl/programs/programs
-     * 
+     *
      * @param string $serviceId
      */
-    public function setServiceId($serviceId) {
+    public function setServiceId($serviceId)
+    {
         $this->_serviceId = $serviceId;
     }
 
@@ -29,23 +31,27 @@ class Pay_Api {
      * Set the API token
      * The API token is used to identify your company.
      * The API token can be found on: https://admin.pay.nl/my_merchant on the bottom
-     * 
+     *
      * @param string $apiToken
      */
-    public function setApiToken($apiToken) {
+    public function setApiToken($apiToken)
+    {
         $this->_apiToken = $apiToken;
     }
 
-    protected function _getPostData() {
+    protected function _getPostData()
+    {
 
         return $this->_postData;
     }
 
-    protected function _processResult($data) {
+    protected function _processResult($data)
+    {
         return $data;
     }
 
-    private function _getApiUrl() {
+    private function _getApiUrl()
+    {
         if ($this->_version == '') {
             throw new Pay_Exception('version not set', 1);
         }
@@ -59,10 +65,13 @@ class Pay_Api {
         return $this->_apiUrl . '/' . $this->_version . '/' . $this->_controller . '/' . $this->_action . '/json/';
     }
 
-    public function getPostData(){
+    public function getPostData()
+    {
         return $this->_getPostData();
     }
-    public function doRequest() {
+
+    public function doRequest()
+    {
         if ($this->_getPostData()) {
 
             $url = $this->_getApiUrl();
@@ -78,8 +87,8 @@ class Pay_Api {
             } else {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $strData);
             }
-           
-          
+
+
             curl_setopt($ch, CURLOPT_URL, $apiUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
@@ -99,15 +108,16 @@ class Pay_Api {
         }
     }
 
-    protected function validateResult($arrResult) {
+    protected function validateResult($arrResult)
+    {
         if ($arrResult['request']['result'] == 1) {
             return true;
         } else {
-            if(isset($arrResult['request']['errorId']) && isset($arrResult['request']['errorMessage']) ){
+            if (isset($arrResult['request']['errorId']) && isset($arrResult['request']['errorMessage'])) {
                 throw new Pay_Api_Exception($arrResult['request']['errorId'] . ' - ' . $arrResult['request']['errorMessage']);
-            } elseif(isset($arrResult['error'])){
+            } elseif (isset($arrResult['error'])) {
                 throw new Pay_Api_Exception($arrResult['error']);
-            } else {   
+            } else {
                 throw new Pay_Api_Exception('Unexpected api result');
             }
         }
