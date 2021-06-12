@@ -11,8 +11,7 @@ if (!defined('BOOTSTRAP')) {
     die('Access denied');
 }
 
-if (defined('PAYMENT_NOTIFICATION'))
-{
+if (defined('PAYMENT_NOTIFICATION')) {
     # Callback
     $order_info = null;
     $orderId = intval($_REQUEST['csCartOrderId']);
@@ -101,17 +100,13 @@ if (defined('PAYMENT_NOTIFICATION'))
 
 function fn_updatePayTransaction($transactionId, $status)
 {
-    $data = array(
-        'status' => $status,
-        'last_update' => date('Y-m-d H:i:s')
-    );
-    db_query('UPDATE ?:paynl_transactions SET ?u WHERE transaction_id = ?i',
-        $data, $transactionId);
+    $data = array('status' => $status, 'last_update' => date('Y-m-d H:i:s'));
+    db_query('UPDATE ?:paynl_transactions SET ?u WHERE transaction_id = ?i', $data, $transactionId);
 }
 
 function fn_isAlreadyPAID($transactionID)
 {
-    $orderID = db_get_field('SELECT order_id FROM ?:paynl_transactions WHERE transaction_id =?s',$transactionID);
+    $orderID = db_get_field('SELECT order_id FROM ?:paynl_transactions WHERE transaction_id =?s', $transactionID);
 
     $arrTransactions = db_get_field('SELECT count(*) FROM ?:paynl_transactions WHERE order_id =?s AND status = "PAID" ', $orderID);
 
