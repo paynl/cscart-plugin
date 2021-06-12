@@ -2,6 +2,11 @@
 
 class Pay_Helper
 {
+    const PAYMENT_PAID = 'PAID';
+    const PAYMENT_AUTHORIZE = 'AUTHORIZE';
+    const PAYMENT_CHECKAMOUNT = 'CHECKAMOUNT';
+    const PAYMENT_CANCEL = 'CANCEL';
+    const PAYMENT_PENDING = 'PENDING';
 
     /**
      * Bepaal de status aan de hand van het statusid.
@@ -15,16 +20,16 @@ class Pay_Helper
         switch ($stateId) {
             case 80:
             case -51:
-                return 'CHECKAMOUNT';
+                return self::PAYMENT_CHECKAMOUNT;
             case 100:
-                return 'PAID';
+                return self::PAYMENT_PAID;
             case 95:
-                return 'AUTHORIZE';
+                return self::PAYMENT_AUTHORIZE;
             default:
                 if ($stateId < 0) {
-                    return 'CANCEL';
+                    return self::PAYMENT_CANCEL;
                 } else {
-                    return 'PENDING';
+                    return self::PAYMENT_PENDING;
                 }
         }
     }

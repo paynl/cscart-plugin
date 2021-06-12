@@ -22,38 +22,33 @@ if (defined('PAYMENT_NOTIFICATION'))
         die();
     }
 
-    $order_info = fn_get_order_info($orderId, true);
-    $payNLTransactionID = $mode == 'exchange' ? $_REQUEST['order_id'] : $_REQUEST['orderId'];
-    $action = $_REQUEST['action'];
-
-    if ($action == 'pending') {
-        die('TRUE|Ignoring pending');
+    $action = $_REQUEST['action'] ?? '';
+    $payNLTransactionID = $_REQUEST['order_id'] ?? '';
+    if ($action == 'pending' || $action == 'refund:received' || empty($action) || empty($payNLTransactionID)) {
+        die('TRUE|Ignoring ' . (empty($payNLTransactionID) ? ', no order id' : $action));
     }
 
-    $csCartOrderAmount = intval($order_info['subtotal'] * 100);
+    $order_info = fn_get_order_info($orderId, true);
+    $csCartOrderAmount = intval(floatval($order_info['total']) * 100);
     $processor_data = fn_get_processor_data($order_info['payment_id']);
     $statuses = $processor_data['processor_params']['statuses'];
 
     if ($mode == 'exchange') {
-        # Retrieve paymentdata from PAY.
+        # Retrieve PAY.-data
         $payData = fn_paynl_getStatus($payNLTransactionID, $processor_data);
         $alreadyPaid = fn_isAlreadyPAID($payNLTransactionID) || $order_info['status'] == 'P';
 
         if ($alreadyPaid) {
-            $message = 'Order already PAID';
-            if ($mode == 'exchange') {
-                echo 'TRUE|' . $message;
-                die;
-            }
+            die('TRUE|Order already PAID');
         }
+        $payAmount = intval($payData['paymentDetails']['amount']['value']);
+        $state = Pay_Helper::getStateText($payData['paymentDetails']['state']);
+        $bPaid = in_array($state, array(Pay_Helper::PAYMENT_AUTHORIZE, Pay_Helper::PAYMENT_PAID));
 
-        $payAmount = intval($payData['paymentDetails']['amountPaid']['value']);
-        if ($action == 'new_ppt' && $payAmount !== $csCartOrderAmount) {
-            fn_change_order_status($orderId, $statuses['checkamount']);
+        if ($bPaid && $payAmount !== $csCartOrderAmount) {
             die('TRUE|Failed, invalid amounts: ' . $payAmount . ' vs ' . $csCartOrderAmount);
         }
 
-        $state = Pay_Helper::getStateText($payData['paymentDetails']['state']);
         $idstate = $statuses[strtolower($state)];
         if (!empty($idstate)) {
             if (fn_check_payment_script('paynl.php', $orderId)) {
@@ -62,7 +57,7 @@ if (defined('PAYMENT_NOTIFICATION'))
 
             fn_updatePayTransaction($payNLTransactionID, $state);
 
-            if ($state == 'PAID') {
+            if ($bPaid) {
                 $pp_response = array('order_status' => $idstate, 'naam' => $payData['paymentDetails']['identifierName'], 'rekening' => $payData['paymentDetails']['identifierPublic']);
                 fn_finish_payment($orderId, $pp_response);
             }
