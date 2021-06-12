@@ -19,19 +19,16 @@ function fn_get_ideal_banks($processor_data)
     $service->setServiceId($processor_data['processor_params']['service_id']);
     try {
         $result = $service->doRequest();
-        $banks = $result['paymentOptions'][$processor_data['processor_params']['optionId']]['paymentOptionSubList'];
-
-        return $banks;
+        return $result['paymentOptions'][$processor_data['processor_params']['optionId']]['paymentOptionSubList'];
     } catch (Exception $ex) {
         fn_set_notification('E', __('error'), $ex->getMessage());
-
     }
 }
 
 
-function fn_paynl_getInfo($payNLTransactionID, $processor_data)
+function fn_paynl_getStatus($payNLTransactionID, $processor_data)
 {
-    $payApiInfo = new Pay_Api_Info();
+    $payApiInfo = new Pay_Api_Status();
     $payApiInfo->setApiToken($processor_data['processor_params']['token_api']);
     $payApiInfo->setServiceId($processor_data['processor_params']['service_id']);
     $payApiInfo->setTransactionId($payNLTransactionID);
@@ -44,27 +41,11 @@ function fn_paynl_getInfo($payNLTransactionID, $processor_data)
     return $result;
 }
 
-function fn_paynl_getState($payNLTransactionID, $processor_data)
-{
-    $payApiInfo = new Pay_Api_Info();
-    $payApiInfo->setApiToken($processor_data['processor_params']['token_api']);
-    $payApiInfo->setServiceId($processor_data['processor_params']['service_id']);
-    $payApiInfo->setTransactionId($payNLTransactionID);
-    try {
-        $result = $payApiInfo->doRequest();
-    } catch (Exception $ex) {
-        fn_set_notification('E', __('error'), $ex->getMessage());
-        fn_redirect('/index.php?dispatch=checkout.checkout');
-    }
-    $state = Pay_Helper::getStateText($result['paymentDetails']['state']);
-    return $state;
-}
-
 function getObjectData()
 {
     $phpVersion = substr(phpversion(), 0, 3);
     $cscartVersion = defined('PRODUCT_VERSION') ? PRODUCT_VERSION : '-';
-    $payPlugin = '1.1.3';
+    $payPlugin = '1.1.4';
 
     return substr('cscart ' . $payPlugin . ' | ' . $cscartVersion . ' | ' . $phpVersion, 0, 64);
 }
@@ -167,8 +148,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     }
 
     try {
-        $result = $payNL->doRequest();
-        return $result;
+        return $payNL->doRequest();
     } catch (Exception $ex) {
         fn_set_notification('E', __('error'), $ex->getMessage());
         fn_redirect('/index.php?dispatch=checkout.checkout');
