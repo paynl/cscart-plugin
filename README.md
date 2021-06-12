@@ -27,6 +27,12 @@ Bank Transfer | Cartasi | GivaCard | SprayPay | Przelewy24 |
 | Tikkie | | YourGift | Creditclick | | 
 | | | Paysafecard |
 
+# Requirements
+
+    Minimum PHP Version: PHP 7.1
+    Tested up to CSCart 4.10.2
+
+
 # Installation
 #### Installing
 
