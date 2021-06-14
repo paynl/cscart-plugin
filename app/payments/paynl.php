@@ -40,7 +40,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
         if ($alreadyPaid) {
             die('TRUE|Order already PAID');
         }
-        $payAmount = intval($payData['paymentDetails']['amount']['value']);
+        $payAmount = intval($payData['paymentDetails']['amountOriginal']['value']);
         $state = Pay_Helper::getStateText($payData['paymentDetails']['state']);
         $bPaid = in_array($state, array(Pay_Helper::PAYMENT_AUTHORIZE, Pay_Helper::PAYMENT_PAID));
 
