@@ -28,7 +28,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
     }
 
     $order_info = fn_get_order_info($orderId, true);
-    $csCartOrderAmount = floatval($order_info['total']) * 100;
+    $csCartOrderAmount = (int)str_replace('.', '', $order_info['total']);
     $processor_data = fn_get_processor_data($order_info['payment_id']);
     $statuses = $processor_data['processor_params']['statuses'];
 
@@ -40,7 +40,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
         if ($alreadyPaid) {
             die('TRUE|Order already PAID');
         }
-        $payAmount = floatval($payData['paymentDetails']['amountOriginal']['value']);
+        $payAmount = (int)$payData['paymentDetails']['amountOriginal']['value'];
         $state = Pay_Helper::getStateText($payData['paymentDetails']['state']);
         $bPaid = in_array($state, array(Pay_Helper::PAYMENT_AUTHORIZE, Pay_Helper::PAYMENT_PAID));
 
