@@ -97,7 +97,7 @@ jQuery(document).ready(function(){
     <select name="payment_data[processor_params][statuses][authorize]" id="payNL_authorize">
         {foreach from=$statuses item="s" key="k"}
             <option value="{$k}"
-                    {if (isset($processor_params.statuses.authorize) && $processor_params.statuses.authorize == $k) || (!isset($processor_params.statuses.authorize) && $k == 'I')}selected="selected"{/if}>{$s}</option>
+                    {if (isset($processor_params.statuses.authorize) && $processor_params.statuses.authorize == $k) || (!isset($processor_params.statuses.authorize) && $k == 'P')}selected="selected"{/if}>{$s}</option>
         {/foreach}
     </select>
 </div>
