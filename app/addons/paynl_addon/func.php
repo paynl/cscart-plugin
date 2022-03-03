@@ -114,7 +114,14 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
 
     $payment_surcharge = paynl_getTaxForSurcharge($order_info);
     if ($payment_surcharge['price_incl'] > 0) {
-        $item_name = empty($order_info['payment_method']['surcharge_title']) ? 'Surcharge' : $order_info['payment_method']['surcharge_title'];
+
+        $item_name = $order_info['payment_method']['surcharge_title'];
+        if (empty($item_name) && strtolower($order_info['lang_code']) == 'nl'){
+            $item_name = 'Toeslag';
+        } elseif (empty($item_name)){
+            $item_name = 'Surcharge';
+        }
+
         $taxPercent = $payment_surcharge['tax_amount'] / $payment_surcharge['price_excl'] * 100;
 
         $taxClass = paynl_getTaxClass($taxPercent);
