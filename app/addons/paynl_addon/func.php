@@ -116,9 +116,9 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     if ($payment_surcharge['price_incl'] > 0) {
 
         $item_name = $order_info['payment_method']['surcharge_title'];
-        if (empty($item_name) && strtolower($order_info['lang_code']) == 'nl'){
+        if (empty($item_name) && strtolower($order_info['lang_code']) == 'nl') {
             $item_name = 'Toeslag';
-        } elseif (empty($item_name)){
+        } elseif (empty($item_name)) {
             $item_name = 'Surcharge';
         }
 
