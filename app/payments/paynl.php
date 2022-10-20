@@ -85,7 +85,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
     db_query("INSERT INTO ?:paynl_transactions  ?e", $data);
 
     # Update table order
-    fn_change_order_status($order_id, 'O', '', false);
+    fn_change_order_status($order_id, 'O', '', []);
     $url = $result['transaction']['paymentURL'];
     if (isset($url)) {
         fn_redirect($url, true);
