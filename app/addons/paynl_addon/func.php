@@ -45,7 +45,7 @@ function getObjectData()
 {
     $phpVersion = substr(phpversion(), 0, 3);
     $cscartVersion = defined('PRODUCT_VERSION') ? PRODUCT_VERSION : '-';
-    $payPlugin = '1.1.8';
+    $payPlugin = '1.1.9';
 
     return substr('cscart ' . $payPlugin . ' | ' . $cscartVersion . ' | ' . $phpVersion, 0, 64);
 }
@@ -97,9 +97,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
 
     foreach ($order_info['products'] as $key => $product) {
         $prices = paynl_getTaxForItem($order_info, $key);
-
-        $taxPercent = $prices['tax_amount'] / $prices['price_excl'] * 100;
-
+        $taxPercent = empty($prices['price_excl']) ? 0 : ($prices['tax_amount'] / $prices['price_excl'] * 100);
         $taxClass = paynl_getTaxClass($taxPercent);
 
         $payNL->addProduct(
