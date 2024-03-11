@@ -45,7 +45,7 @@ function getObjectData()
 {
     $phpVersion = substr(phpversion(), 0, 3);
     $cscartVersion = defined('PRODUCT_VERSION') ? PRODUCT_VERSION : '-';
-    $payPlugin = '1.1.9';
+    $payPlugin = '1.1.10';
 
     return substr('cscart ' . $payPlugin . ' | ' . $cscartVersion . ' | ' . $phpVersion, 0, 64);
 }
