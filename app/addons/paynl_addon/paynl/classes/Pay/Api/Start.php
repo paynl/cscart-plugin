@@ -84,7 +84,8 @@ class Pay_Api_Start extends Pay_Api
 
         $quantity = $quantity * 1;
 
-        //description mag maar 45 chars lang zijn
+        //clean up special characters in description and shorten it to a max of 45 characters
+        $description = iconv('UTF-8', 'ASCII//TRANSLIT', $description);
         $description = substr($description, 0, 45);
 
         $arrProduct = array('productId' => $id, 'description' => $description, 'price' => $price, 'quantity' => $quantity, 'vatCode' => $vatPercentage,);
