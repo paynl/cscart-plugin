@@ -68,6 +68,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $payNL->setCurrency($currency);
     $payNL->setFinishUrl($finishUrl);
     $payNL->setDescription($order_info['order_id']);
+    $payNL->setOrderNumber($order_info['order_id']);
 
     $s_address = splitAddress(trim($order_info['s_address'] . ' ' . $order_info['s_address_2']));
     $b_address = splitAddress(trim($order_info['b_address'] . ' ' . $order_info['b_address_2']));
