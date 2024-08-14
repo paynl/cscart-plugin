@@ -3,7 +3,7 @@
 	<id>paynl_addon</id>
 	<name>PAY.</name>
 	<description>PAY. Gateway addon</description>
-	<version>1.1.9</version>
+	<version>1.2.0</version>
 	<priority>1000</priority>
         <settings layout="separate">
           <sections>
