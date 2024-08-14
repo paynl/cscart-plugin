@@ -31,6 +31,7 @@ class Pay_Api_Start extends Pay_Api
     private $_transferData;
 
     private $_products = array();
+    private $_orderNumber;
 
     public function setCurrency($currency)
     {
@@ -220,6 +221,11 @@ class Pay_Api_Start extends Pay_Api
         $this->_description = $description;
     }
 
+    public function setOrderNumber($orderNumber)
+    {
+        $this->_orderNumber = $orderNumber;
+    }
+
     /**
      * Get the post data, if not all required variables are set, this wil rthrow an exception
      *
@@ -262,6 +268,10 @@ class Pay_Api_Start extends Pay_Api
 
         if (!empty($this->_description)) {
             $data['transaction']['description'] = $this->_description;
+        }
+
+        if (!empty($this->_orderNumber)) {
+            $data['transaction']['orderNumber'] = $this->_orderNumber;
         }
 
         if (!empty($this->_paymentOptionSubId)) {
