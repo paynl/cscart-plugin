@@ -32,6 +32,22 @@ function getPaymentProfiles(){
 }
 jQuery(document).ready(function(){
     getPaymentProfiles();
+
+    jQuery('a:contains("Configure")').on('click', function () {
+        if (jQuery('#payNL_option').val() == 10) {
+            jQuery('#issuersDropdown').show();
+        } else {
+            jQuery('#issuersDropdown').hide();
+        }
+    });
+
+    jQuery('#payNL_option').on('change', function () {
+        if (jQuery(this).val() == 10) {
+            jQuery('#issuersDropdown').show();
+        } else {
+            jQuery('#issuersDropdown').hide();
+        }
+    });
 });
 </script>
 
@@ -60,6 +76,14 @@ jQuery(document).ready(function(){
 
         </select>
 
+</div>
+
+<div class="form-field" id="issuersDropdown">
+    <label for="issuersOption">Bank issuers:</label>
+    <select name="payment_data[processor_params][issuersOption]" id="issuersOption">
+        <option value="hide" {if (isset($processor_params.issuersOption) && $processor_params.issuersOption == 'hide')}selected="selected"{/if}>Hide</option>
+        <option value="show" {if (isset($processor_params.issuersOption) && $processor_params.issuersOption == 'show')}selected="selected"{/if}>Show</option>
+    </select>
 </div>
 
 {assign var="statuses" value=$smarty.const.STATUSES_ORDER|fn_get_simple_statuses}
