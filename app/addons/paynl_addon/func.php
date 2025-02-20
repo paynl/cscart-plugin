@@ -50,7 +50,7 @@ function getObjectData()
     return substr('cscart ' . $payPlugin . ' | ' . $cscartVersion . ' | ' . $phpVersion, 0, 64);
 }
 
-function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl, $paymentOptionSubId = null)
+function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl)
 {
     $currency = CART_PRIMARY_CURRENCY;
     $payNL = new Pay_Api_Start();
@@ -59,10 +59,6 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $payNL->setAmount(floatval($order_info['total']) * 100);
     $payNL->setPaymentOptionId($processor_data['processor_params']['optionId']);
     $payNL->setObject(getObjectData());
-
-    if (!empty($paymentOptionSubId)) {
-        $payNL->setPaymentOptionSubId($paymentOptionSubId);
-    }
 
     $payNL->setExchangeUrl($exchangeUrl);
     $payNL->setCurrency($currency);
