@@ -88,10 +88,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
     fn_change_order_status($order_id, 'O', '', false);
     $url = $result['transaction']['paymentURL'];
     if (isset($url)) {
-        if (strpos($url, 'https://pay.ideal.nl/transactions/') === 0) {
-            $url = urldecode(substr($url, strlen('https://pay.ideal.nl/transactions/')));
-        }
-        fn_redirect($url, true);
+        header("Location: $url");
         exit;
     } else {
         fn_set_notification('E', "There was an error while processing your transaction: ", "");
