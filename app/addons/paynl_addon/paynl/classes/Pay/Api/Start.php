@@ -12,7 +12,6 @@ class Pay_Api_Start extends Pay_Api
     private $_amount;
     private $_currency;
     private $_paymentOptionId;
-    private $_paymentOptionSubId;
     private $_finishUrl;
     private $_ipAddress;
 
@@ -158,15 +157,6 @@ class Pay_Api_Start extends Pay_Api
         }
     }
 
-    public function setPaymentOptionSubId($paymentOptionSubId)
-    {
-        if (is_numeric($paymentOptionSubId)) {
-            $this->_paymentOptionSubId = $paymentOptionSubId;
-        } else {
-            throw new Pay_Exception('PaymentOptionSubId is niet numeriek', 1);
-        }
-    }
-
     /**
      * Set the url where the user will be redirected to after payment.
      *
@@ -273,11 +263,6 @@ class Pay_Api_Start extends Pay_Api
         if (!empty($this->_orderNumber)) {
             $data['transaction']['orderNumber'] = $this->_orderNumber;
         }
-
-        if (!empty($this->_paymentOptionSubId)) {
-            $data['paymentOptionSubId'] = $this->_paymentOptionSubId;
-        }
-
 
         $data['ipAddress'] = empty($this->_ipAddress) ? $_SERVER['REMOTE_ADDR'] : $this->_ipAddress;
 

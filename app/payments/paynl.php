@@ -73,7 +73,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
 
     $exchangeUrl = fn_url("payment_notification.exchange?payment=paynl&csCartOrderId=$order_id", AREA, 'current');
     $finishUrl = fn_url("payment_notification.finish?payment=paynl&csCartOrderId=$order_id", AREA, 'current');
-    $result = fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl, $paymentOptionSub);
+    $result = fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl);
     $data = array(
         'transaction_id' => $result['transaction']['transactionId'],
         'option_id' => $processor_data['processor_params']['optionId'],
@@ -88,7 +88,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
     fn_change_order_status($order_id, 'O', '', false);
     $url = $result['transaction']['paymentURL'];
     if (isset($url)) {
-        fn_redirect($url, true);
+        header("Location: $url");
         exit;
     } else {
         fn_set_notification('E', "There was an error while processing your transaction: ", "");

@@ -40,7 +40,7 @@ class Pay_Api_Getservice extends Pay_Api
                 foreach ($arrCountry['paymentOptionList'] as $arrPaymentProfile) {
 
                     if (!isset($arrReturn['paymentOptions'][$arrPaymentProfile['id']])) {
-                        $arrReturn['paymentOptions'][$arrPaymentProfile['id']] = array('id' => $arrPaymentProfile['id'], 'name' => $arrPaymentProfile['name'], 'visibleName' => $arrPaymentProfile['name'], 'img' => $arrPaymentProfile['img'], 'path' => $arrPaymentProfile['path'], 'paymentOptionSubList' => array(), 'countries' => array(),);
+                        $arrReturn['paymentOptions'][$arrPaymentProfile['id']] = array('id' => $arrPaymentProfile['id'], 'name' => $arrPaymentProfile['name'], 'visibleName' => $arrPaymentProfile['name'], 'img' => $arrPaymentProfile['img'], 'path' => $arrPaymentProfile['path'], 'countries' => array(),);
                     }
 
                     if (!empty($arrPaymentProfile['paymentOptionSubList'])) {
