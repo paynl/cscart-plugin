@@ -15,17 +15,17 @@ With the PAY. plugin you can easily add different payment methods to your CS-Car
 
 # Available payment methods
 
-Bank Payments  | Creditcards | Gift cards & Vouchers | Pay by invoice | Others | 
-:-----------: | :-----------: | :-----------: | :-----------: | :-----------: |
-iDEAL + QR |Visa | VVV Cadeaukaart | AfterPay | PayPal |
-Bancontact + QR |  Mastercard | Webshop Giftcard | Billink | WeChatPay | 
-Giropay |American Express | FashionCheque |Focum AchterafBetalen.nl | AmazonPay |
-MyBank | Carte Bancaire | Podium Cadeaukaart | Capayable Achteraf Betalen | Cashly | 
-SOFORT | PostePay | Gezondheidsbon | Capayable Gespreid betalen | Pay Fixed Price (phone) |
-Maestro | Dankort | Fashion Giftcard | Klarna | Instore Payments (POS) |
-Bank Transfer | Cartasi | GivaCard | SprayPay | Przelewy24 | 
-| Tikkie | | YourGift | Creditclick | | 
-| | | Paysafecard |
+Bank Payments  |   Creditcards    | Gift cards & Vouchers | Pay by invoice | Others | 
+:-----------: |:----------------:| :-----------: |:--------------:| :-----------: |
+iDEAL + QR |       Visa       | VVV Cadeaukaart |    Riverty     | PayPal |
+Bancontact + QR |    Mastercard    | Webshop Giftcard |    Billink     | WeChatPay | 
+Giropay | American Express | FashionCheque |         Klarna       | AmazonPay |
+MyBank |  Carte Bancaire  | Podium Cadeaukaart |      In3       | Przelewy24 | 
+SOFORT |     PostePay     | Gezondheidsbon |      SprayPay          | Pay Fixed Price (phone) |
+Maestro |     Dankort      | Fashion Giftcard |     Creditclick     | Instore Payments (POS) |
+Bank Transfer |       Nexi       | GivaCard |        |  | 
+|  |                  | YourGift |     | | 
+| |                  | Paysafecard |
 
 # Requirements
 
