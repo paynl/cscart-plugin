@@ -16,7 +16,6 @@ function getConfig($tokenCode = null, $apiToken = null)
 
 function fn_getCredential($var)
 {
-    $paynl_setting = Registry::get('addons.paynl_addon');
     return array('token_api' => getApiToken(),
         'service_id' => getServiceId(),
         'token_code' => getTokencode());
@@ -25,7 +24,6 @@ function fn_getCredential($var)
 function fn_getPaymentMethods()
 {
     try {
-        $paynl_settings = Registry::get('addons.paynl_addon');
         $serviceId = getServiceId();
         $tokenCode = getTokencode();
         $apiToken = getApiToken();
