@@ -17,20 +17,19 @@ function getConfig($tokenCode = null, $apiToken = null)
 function fn_getCredential($var)
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
-    return array('token_api' => $paynl_setting['token_api'],
-        'service_id' => $paynl_setting['service_id'],
-        'token_code' => $paynl_setting['token_code']);
+    return array('token_api' => getApiToken(),
+        'service_id' => getServiceId(),
+        'token_code' => getTokencode());
 }
 
 function fn_getPaymentMethods()
 {
     try {
         $paynl_settings = Registry::get('addons.paynl_addon');
-        $serviceId = $paynl_settings['service_id'];
-        $tokenCode = $paynl_settings['token_code'];
-        $apiToken = $paynl_settings['token_api'];
+        $serviceId = getServiceId();
+        $tokenCode = getTokencode();
+        $apiToken = getApiToken();
 
-        // Create config with core auto-selection
         $config = getConfig($tokenCode, $apiToken);
 
         $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
@@ -383,4 +382,22 @@ function paynl_nearest($number, $numbers)
         $output = $NDat[0];
     }
     return $output;
+}
+
+function getApiToken()
+{
+    $paynl_setting = Registry::get('addons.paynl_addon');
+    return $paynl_setting['token_api'];
+}
+
+function getTokencode()
+{
+    $paynl_setting = Registry::get('addons.paynl_addon');
+    return $paynl_setting['token_code'];
+}
+
+function getServiceId()
+{
+    $paynl_setting = Registry::get('addons.paynl_addon');
+    return $paynl_setting['service_id'];
 }

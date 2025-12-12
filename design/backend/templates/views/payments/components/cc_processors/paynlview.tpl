@@ -35,7 +35,11 @@
     <div class="control-group">
         <select name="payment_data[processor_params][optionId]" id="payNL_option">
             <option value="">Select payment method...</option>
-            {$paymentMethods|@var_dump}
+            {if is_array($paymentMethods) && !empty($paymentMethods)}
+                {foreach from=$paymentMethods item="method"}
+                    <option value="{$method.id}" {if isset($processor_params.optionId) && $processor_params.optionId == $method.id}selected="selected"{/if}>{$method.name}</option>
+                {/foreach}
+            {/if}
         </select>
     </div>
 </div>
