@@ -25,26 +25,38 @@ function fn_getCredential($var)
 function fn_getPaymentMethods()
 {
     try {
+
         $paynl_settings = Registry::get('addons.paynl_addon');
+
         $serviceId = getServiceId();
         $tokenCode = getTokencode();
         $apiToken = getApiToken();
 
         $config = getConfig($tokenCode, $apiToken);
 
-        $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
-            ->setConfig($config)
-            ->start();
+        try {
+            $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
+                ->setConfig($config)
+                ->start();
 
-        $paymentMethods = $serviceConfig->getPaymentMethods();
-        $formattedMethods = array();
+            $paymentMethods = $serviceConfig->getPaymentMethods();
+            $formattedMethods = array();
 
-        foreach ($paymentMethods as $method) {
-            $formattedMethods[] = array(
-                'id' => $method->getId(),
-                'name' => $method->getName()
-            );
+            foreach ($paymentMethods as $method) {
+                $formattedMethods[] = array(
+                    'id' => $method->getId(),
+                    'name' => $method->getName()
+                );
+            }
+
+
+        } catch (Exception $ex)
+        {
+            //todo: log error exception
+
+            $formattedMethods = [];
         }
+
 
         return $formattedMethods;
 
