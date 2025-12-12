@@ -2,13 +2,57 @@
 
 use Tygh\Registry;
 
-require_once(dirname(__FILE__) . '/paynl/classes/Autoload.php');
+require_once(dirname(__FILE__) . '/paynl/classes/Pay/vendor/autoload.php');
+
+
+function getConfig($tokenCode = null, $apiToken = null)
+{
+    $config = new \PayNL\Sdk\Config\Config();
+    $config->setUsername($tokenCode);
+    $config->setPassword($apiToken);
+
+    return $config;
+}
 
 function fn_getCredential($var)
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return array('token_api' => $paynl_setting['token_api'],
-        'service_id' => $paynl_setting['service_id']);
+        'service_id' => $paynl_setting['service_id'],
+        'token_code' => $paynl_setting['token_code']);
+}
+
+function fn_getPaymentMethods()
+{
+    try {
+        $paynl_settings = Registry::get('addons.paynl_addon');
+        $serviceId = $paynl_settings['service_id'];
+        $tokenCode = $paynl_settings['token_code'];
+        $apiToken = $paynl_settings['token_api'];
+
+        // Create config with core auto-selection
+        $config = getConfig($tokenCode, $apiToken);
+
+        $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
+            ->setConfig($config)
+            ->start();
+
+        $paymentMethods = $serviceConfig->getPaymentMethods();
+        $formattedMethods = array();
+
+        foreach ($paymentMethods as $method) {
+            $formattedMethods[] = array(
+                'id' => $method->getId(),
+                'name' => $method->getName()
+            );
+        }
+
+        return $formattedMethods;
+
+    } catch (Exception $ex) {
+        fn_set_notification('E', __('error'), $ex->getMessage());
+        return array();
+    }
 }
 
 function fn_get_ideal_banks($processor_data)

@@ -1,43 +1,19 @@
 {assign var="credential" value=''|fn_getCredential }
+{assign var="paymentMethods" value=''|fn_getpaymentMethods }
 <h3>PAY.</h3>
 <p/>
-<script type="text/javascript">
-function getPaymentProfiles(){
-    var serviceId = jQuery('#service_id').val();
-    var apiToken = jQuery('#token_api').val();
 
-    var selectedOption = '{$processor_params.optionId}';
-
-    if(serviceId != '' && apiToken != ''){
-        jQuery('#payNL_option').html('<option>Loading...</option>');
-        jQuery.ajax({
-            url: 'https://rest-api.pay.nl/v4/Transaction/getServicePaymentOptions/jsonp/?token='+apiToken+'&serviceId='+serviceId,
-            dataType: 'jsonp',
-            success: function(data){
-                if(data.request.result == 1){
-                    var options = "";
-                    jQuery.each(data.paymentProfiles, function(key, profile){
-                        options += "<option value='"+profile.id+"'>"+profile.name+"</option>";
-                    });
-                    jQuery('#payNL_option').html(options);
-                    jQuery('#payNL_option').val(selectedOption);
-
-                } else {
-                    jQuery('#payNL_option').html('<option>Please check ApiToken and serviceId</option>');
-                    alert('Error: '+data.request.errorMessage);
-                }
-            }
-        });
-    }
-}
-jQuery(document).ready(function(){
-    getPaymentProfiles();
-});
-</script>
+{*Token Code*}
+<div class="form-field">
+    <label  for="token_code">Token Code:</label>
+    <div class="control-group">
+        <input onchange="getPaymentProfiles();" type="text" name="payment_data[processor_params][token_code]" id="token_code" value="{if (isset($processor_params['token_code']))}{$processor_params['token_code']}{else}{$credential['token_code']}{/if}"  size="12">
+    </div>
+</div>
 
 {*Service Id*}
 <div class="form-field">
-    <label  for="service_id">Service id:</label>
+    <label  for="service_id">Service ID:</label>
     <div class="control-group">
         <input onchange="getPaymentProfiles();" type="text" name="payment_data[processor_params][service_id]" id="service_id" value="{if (isset($processor_params['service_id']))}{$processor_params['service_id']}{else}{$credential['service_id']}{/if}"  size="12">
     </div>
@@ -45,7 +21,7 @@ jQuery(document).ready(function(){
 
 {*Token api*}
 <div class="form-field">
-    <label  for="token_api">Token:</label>
+    <label  for="token_api">API Token:</label>
     <div class="control-group">
         <input onchange="getPaymentProfiles();" type="text" name="payment_data[processor_params][token_api]" id="token_api" value="{if  (isset($processor_params['token_api']))}{$processor_params['token_api']}{else}{$credential['token_api']}{/if}"  size="40">
     </div>
@@ -55,11 +31,13 @@ jQuery(document).ready(function(){
 
 {* Options *}
 <div class="form-field">
-        <label for="payNL_option">Option:</label>
+    <label for="payNL_option">Payment Method:</label>
+    <div class="control-group">
         <select name="payment_data[processor_params][optionId]" id="payNL_option">
-
+            <option value="">Select payment method...</option>
+            {$paymentMethods|@var_dump}
         </select>
-
+    </div>
 </div>
 
 {assign var="statuses" value=$smarty.const.STATUSES_ORDER|fn_get_simple_statuses}

@@ -13,13 +13,19 @@
                     <type>header</type>
                     <name>Setting</name>
                   </item>
+                  <item id="token_code">
+                    <name>Token code</name>
+                    <type>input</type>
+                    <tooltip>
+                        The AT-code belonging to your API token, you can find this here: https://admin.pay.nl/company/tokens. The token code should be in the following format: AT-xxxx-xxxx</tooltip>
+                  </item>
                   <item id="service_id">
                     <name>Service id</name>
                     <type>input</type>
-                    <tooltip>The serviceid to identify your website, you can find your serviceid https://admin.pay.nl/programs/programs The serviceid should be in the following format: SL-xxxx-xxxx</tooltip>
+                    <tooltip>The serviceid to identify your website, you can find your serviceid https://admin.pay.nl/programs/programs. The service id should be in the following format: SL-xxxx-xxxx</tooltip>
                   </item>
                   <item id="token_api">
-                    <name>token </name>
+                    <name>API token</name>
                     <type>input</type>
                     <tooltip>The api token used to communicate with the PAY. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
                   </item>
