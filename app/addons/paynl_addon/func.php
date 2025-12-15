@@ -18,13 +18,6 @@ function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core 
     return $config;
 }
 
-function fn_getCredential($var)
-{
-    return array('token_api' => getApiToken(),
-        'service_id' => getServiceId(),
-        'token_code' => getTokencode());
-}
-
 function fn_getPaymentMethods()
 {
     try {
@@ -118,6 +111,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $request->setConfig($config);
     $request->setServiceId(getServiceId());
     $request->setAmount(floatval($order_info['total']));
+    $request->setTestmode(getTestMode());
     $request->setCurrency($currency);
     $request->setReturnurl($finishUrl);
     $request->setExchangeUrl($exchangeUrl);
@@ -201,7 +195,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $surchargeProduct = new \PayNL\Sdk\Model\Product();
         $surchargeProduct->setId(substr($item_name, 0, 24));
         $surchargeProduct->setDescription($item_name);
-        $surchargeProduct->setType(\PayNL\Sdk\Model\Product::TYPE_SURCHARGE);
+        $surchargeProduct->setType(\PayNL\Sdk\Model\Product::TYPE_HANDLING);
         $surchargeProduct->setAmount($payment_surcharge['price_incl']);
         $surchargeProduct->setCurrency($currency);
         $surchargeProduct->setQuantity(1);
@@ -255,24 +249,6 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $products->addProduct($discountProduct);
     }
 
-    if (!empty($order_info['gift_certificates'])) {
-        foreach ($order_info['gift_certificates'] as $k => $v) {
-            $v['amount'] = (!empty($v['extra']['exclude_from_calculate'])) ? 0 : $v['amount'];
-            if ($v['amount'] > 0) {
-                $giftProduct = new \PayNL\Sdk\Model\Product();
-                $giftProduct->setId($v['gift_cert_id']);
-                $giftProduct->setDescription($v['gift_cert_code']);
-                $giftProduct->setType(\PayNL\Sdk\Model\Product::TYPE_DISCOUNT);
-                $giftProduct->setAmount(-$v['amount']);
-                $giftProduct->setCurrency($currency);
-                $giftProduct->setQuantity(1);
-                $giftProduct->setVatPercentage(0);
-                
-                $products->addProduct($giftProduct);
-            }
-        }
-    }
-    
     $order->setProducts($products);
     $request->setOrder($order);
     
@@ -509,6 +485,15 @@ function getServiceId()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['service_id'];
+}
+
+function getTestMode()
+{
+    $paynl_setting = Registry::get('addons.paynl_addon');
+    if (empty($paynl_setting['test_mode'])) {
+        return 0;
+    }
+    return $paynl_setting['test_mode'] == 'Y' ? 1 : 0;
 }
 
 function fn_paynl_getMultiCore()
