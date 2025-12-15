@@ -1,5 +1,6 @@
 {assign var="credential" value=''|fn_getCredential }
 {assign var="paymentMethods" value=''|fn_getpaymentMethods }
+{assign var="multiCore" value=''|fn_paynl_getMultiCore }
 <h3>PAY.</h3>
 <p/>
 
@@ -27,8 +28,6 @@
     </div>
 </div>
 
-
-
 {* Options *}
 <div class="form-field">
     <label for="payNL_option">Payment Method:</label>
@@ -38,6 +37,21 @@
             {if is_array($paymentMethods) && !empty($paymentMethods)}
                 {foreach from=$paymentMethods item="method"}
                     <option value="{$method.id}" {if isset($processor_params.optionId) && $processor_params.optionId == $method.id}selected="selected"{/if}>{$method.name}</option>
+                {/foreach}
+            {/if}
+        </select>
+    </div>
+</div>
+
+{* Multicore *}
+<div class="form-field">
+    <label for="payNL_multicore">Multicore:</label>
+    <div class="control-group">
+        <select name="payment_data[processor_params][multicore]" id="payNL_multicore">
+            <option value="">Select multicore...</option>
+            {if is_array($multiCore) && !empty($multiCore)}
+                {foreach from=$multiCore item="core"}
+                    <option value="{$core.id}" {if $selected == $core.id}selected="selected"{/if}>{$core.name}</option>
                 {/foreach}
             {/if}
         </select>

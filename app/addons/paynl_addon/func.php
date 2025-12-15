@@ -5,11 +5,16 @@ use Tygh\Registry;
 require_once(dirname(__FILE__) . '/paynl/classes/Pay/vendor/autoload.php');
 
 
-function getConfig($tokenCode = null, $apiToken = null)
+function getConfig($tokenCode = null, $apiToken = null, $useCore = false)
 {
     $config = new \PayNL\Sdk\Config\Config();
     $config->setUsername($tokenCode);
     $config->setPassword($apiToken);
+
+    $core = '';
+    if (!empty($core) && $useCore === true) {
+        $config->setCore($core);
+    }
 
     return $config;
 }
@@ -89,9 +94,8 @@ function getObjectData()
 function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl)
 {
     $currency = CART_PRIMARY_CURRENCY;
-    
-    // Create config using existing getConfig function
-    $config = getConfig(getTokencode(), getApiToken());
+
+    $config = getConfig(getTokencode(), getApiToken(), true);
     
     // Create the order request
     $request = new \PayNL\Sdk\Model\Request\OrderCreateRequest();
@@ -490,4 +494,37 @@ function getServiceId()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['service_id'];
+}
+
+function fn_paynl_getMultiCore()
+{
+    try {
+        $serviceId = getServiceId();
+        $tokenCode = getTokencode();
+        $apiToken = getApiToken();
+
+        $config = getConfig($tokenCode, $apiToken);
+
+        $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
+            ->setConfig($config)
+            ->start();
+
+        $cores = $serviceConfig->getCores();
+        $formattedCores = array();
+
+        foreach ($cores as $core) {
+            if ($core['status'] === 'ACTIVE') {
+                $formattedCores[] = array(
+                    'id' => $core['domain'],
+                    'name' => $core['label']
+                );
+            }
+        }
+
+        return $formattedCores;
+
+    } catch (Exception $ex) {
+        fn_set_notification('E', __('error'), 'Could not fetch TGU cores: ' . $ex->getMessage());
+        return array();
+    }
 }
