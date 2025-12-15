@@ -18,6 +18,9 @@ function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core 
     return $config;
 }
 
+/**
+ * @return array
+ */
 function fn_getPaymentMethods()
 {
     try {
@@ -63,7 +66,11 @@ function fn_get_ideal_banks($processor_data)
     }
 }
 
-
+/**
+ * @param $payNLTransactionID
+ * @param $processor_data
+ * @return array[]|void
+ */
 function fn_paynl_getStatus($payNLTransactionID, $processor_data)
 {
     try {
@@ -100,6 +107,15 @@ function getObjectData()
     return substr('cscart ' . $payPlugin . ' | ' . $cscartVersion . ' | ' . $phpVersion, 0, 64);
 }
 
+/**
+ * @param $order_id
+ * @param $order_info
+ * @param $processor_data
+ * @param $exchangeUrl
+ * @param $finishUrl
+ * @return array|void
+ * @throws Exception
+ */
 function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl)
 {
     $currency = CART_PRIMARY_CURRENCY;
@@ -469,24 +485,36 @@ function paynl_nearest($number, $numbers)
     return $output;
 }
 
+/**
+ * @return string
+ */
 function getApiToken()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['token_api'];
 }
 
+/**
+ * @return string
+ */
 function getTokencode()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['token_code'];
 }
 
+/**
+ * @return string
+ */
 function getServiceId()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['service_id'];
 }
 
+/**
+ * @return int
+ */
 function getTestMode()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
@@ -496,6 +524,9 @@ function getTestMode()
     return $paynl_setting['test_mode'] == 'Y' ? 1 : 0;
 }
 
+/**
+ * @return array
+ */
 function fn_paynl_getMultiCore()
 {
     try {
