@@ -21,14 +21,14 @@ if (defined('PAYMENT_NOTIFICATION')) {
         die();
     }
 
-    $action = $_REQUEST['action'] ?? '';
-    $payNLTransactionID = $_REQUEST['order_id'] ?? '';
-    if ($action == 'pending' || $action == 'refund:received' || empty($action) || empty($payNLTransactionID)) {
+    $action = $_REQUEST['object']['status']['action'] ?? '';
+    $payNLTransactionID = $_REQUEST['object']['orderId'] ?? '';
+    if (strtolower($action) == 'pending' || strtolower($action) == 'refund:received' || empty($action) || empty($payNLTransactionID)) {
         die('TRUE|Ignoring ' . (empty($payNLTransactionID) ? ', no order id' : $action));
     }
 
     $order_info = fn_get_order_info($orderId, true);
-    $csCartOrderAmount = (int)str_replace('.', '', $order_info['total']);
+    $csCartOrderAmount = (int)str_replace('.', '', $order_info['total']) / 100;
     $processor_data = fn_get_processor_data($order_info['payment_id']);
     $statuses = $processor_data['processor_params']['statuses'];
 
@@ -41,28 +41,27 @@ if (defined('PAYMENT_NOTIFICATION')) {
             die('TRUE|Order already PAID');
         }
         $payAmount = (int)$payData['paymentDetails']['amountOriginal']['value'];
-        $state = Pay_Helper::getStateText($payData['paymentDetails']['state']);
-        $bPaid = in_array($state, array(Pay_Helper::PAYMENT_AUTHORIZE, Pay_Helper::PAYMENT_PAID));
+        $bPaid = in_array($action, array('AUTHORIZE', 'PAID'));
 
         if ($bPaid && $payAmount !== $csCartOrderAmount) {
             die('TRUE|Failed, invalid amounts: ' . $payAmount . ' vs ' . $csCartOrderAmount);
         }
 
-        $idstate = $statuses[strtolower($state)];
+        $idstate = $statuses[strtolower($action)];
         if (!empty($idstate)) {
             if (fn_check_payment_script('paynl.php', $orderId)) {
                 fn_change_order_status($orderId, $idstate);
             }
 
-            fn_updatePayTransaction($payNLTransactionID, $state);
+            fn_updatePayTransaction($payNLTransactionID, $action);
 
             if ($bPaid) {
                 $pp_response = array('order_status' => $idstate, 'naam' => $payData['paymentDetails']['identifierName'], 'rekening' => $payData['paymentDetails']['identifierPublic']);
                 fn_finish_payment($orderId, $pp_response);
             }
-            die('TRUE| Updated status to: ' . $state . ' state_id: ' . $idstate);
+            die('TRUE| Updated status to: ' . $action . ' state_id: ' . $idstate);
         }
-        die('TRUE| unknown status ' . $state);
+        die('TRUE| unknown status ' . $action);
     }
 } else {
     # Create the transaction

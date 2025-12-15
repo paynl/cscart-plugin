@@ -74,7 +74,24 @@ function fn_get_ideal_banks($processor_data)
 function fn_paynl_getStatus($payNLTransactionID, $processor_data)
 {
     try {
-        $result = $payApiInfo->doRequest();
+        $tokenCode = getTokencode();
+        $apiToken = getApiToken();
+        $config = getConfig($tokenCode, $apiToken);
+
+        $request = new \PayNL\Sdk\Model\Request\TransactionStatusRequest($payNLTransactionID);
+        $request->setConfig($config);
+        $payOrder = $request->start();
+        
+        return array(
+            'paymentDetails' => array(
+                'state' => $payOrder->getStatus(),
+                'amountOriginal' => array(
+                    'value' => $payOrder->getAmount()
+                ),
+                'identifierName' => $payOrder->getPaymentMethod(),
+                'identifierPublic' => $payOrder->getReference()
+            )
+        );
     } catch (Exception $ex) {
         fn_set_notification('E', __('error'), $ex->getMessage());
         fn_redirect('/index.php?dispatch=checkout.checkout');
