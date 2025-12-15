@@ -5,22 +5,22 @@ use Tygh\Registry;
 require_once(dirname(__FILE__) . '/paynl/classes/Pay/vendor/autoload.php');
 
 
-function getConfig($tokenCode = null, $apiToken = null)
+function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core = false)
 {
     $config = new \PayNL\Sdk\Config\Config();
     $config->setUsername($tokenCode);
     $config->setPassword($apiToken);
 
+    if (!empty($core) && $useCore === true) {
+        $config->setCore($core);
+    }
+
     return $config;
 }
 
-function fn_getCredential($var)
-{
-    return array('token_api' => getApiToken(),
-        'service_id' => getServiceId(),
-        'token_code' => getTokencode());
-}
-
+/**
+ * @return array
+ */
 function fn_getPaymentMethods()
 {
     try {
@@ -79,11 +79,32 @@ function fn_get_ideal_banks($processor_data)
     }
 }
 
-
+/**
+ * @param $payNLTransactionID
+ * @param $processor_data
+ * @return array[]|void
+ */
 function fn_paynl_getStatus($payNLTransactionID, $processor_data)
 {
     try {
-        $result = $payApiInfo->doRequest();
+        $tokenCode = getTokencode();
+        $apiToken = getApiToken();
+        $config = getConfig($tokenCode, $apiToken);
+
+        $request = new \PayNL\Sdk\Model\Request\TransactionStatusRequest($payNLTransactionID);
+        $request->setConfig($config);
+        $payOrder = $request->start();
+
+        return array(
+            'paymentDetails' => array(
+                'state' => $payOrder->getStatus(),
+                'amountOriginal' => array(
+                    'value' => $payOrder->getAmount()
+                ),
+                'identifierName' => $payOrder->getPaymentMethod(),
+                'identifierPublic' => $payOrder->getReference()
+            )
+        );
     } catch (Exception $ex) {
         fn_set_notification('E', __('error'), $ex->getMessage());
         fn_redirect('/index.php?dispatch=checkout.checkout');
@@ -99,25 +120,33 @@ function getObjectData()
     return substr('cscart ' . $payPlugin . ' | ' . $cscartVersion . ' | ' . $phpVersion, 0, 64);
 }
 
+/**
+ * @param $order_id
+ * @param $order_info
+ * @param $processor_data
+ * @param $exchangeUrl
+ * @param $finishUrl
+ * @return array|void
+ * @throws Exception
+ */
 function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl)
 {
     $currency = CART_PRIMARY_CURRENCY;
 
-    // Create config using existing getConfig function
-    $config = getConfig(getTokencode(), getApiToken());
-
+    $config = getConfig(getTokencode(), getApiToken(), true, $processor_data['processor_params']['multicore']);
+    
     // Create the order request
     $request = new \PayNL\Sdk\Model\Request\OrderCreateRequest();
     $request->setConfig($config);
     $request->setServiceId(getServiceId());
     $request->setAmount(floatval($order_info['total']));
+    $request->setTestmode(getTestMode());
     $request->setCurrency($currency);
     $request->setReturnurl($finishUrl);
     $request->setExchangeUrl($exchangeUrl);
     $request->setDescription($order_info['order_id']);
     $request->setReference($order_info['order_id']);
 
-    // Set payment method if specified
     if (!empty($processor_data['processor_params']['optionId'])) {
         $request->setPaymentMethodId((int)$processor_data['processor_params']['optionId']);
     }
@@ -195,7 +224,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $surchargeProduct = new \PayNL\Sdk\Model\Product();
         $surchargeProduct->setId(substr($item_name, 0, 24));
         $surchargeProduct->setDescription($item_name);
-        $surchargeProduct->setType(\PayNL\Sdk\Model\Product::TYPE_SURCHARGE);
+        $surchargeProduct->setType(\PayNL\Sdk\Model\Product::TYPE_HANDLING);
         $surchargeProduct->setAmount($payment_surcharge['price_incl']);
         $surchargeProduct->setCurrency($currency);
         $surchargeProduct->setQuantity(1);
@@ -247,24 +276,6 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $discountProduct->setVatPercentage(0);
 
         $products->addProduct($discountProduct);
-    }
-
-    if (!empty($order_info['gift_certificates'])) {
-        foreach ($order_info['gift_certificates'] as $k => $v) {
-            $v['amount'] = (!empty($v['extra']['exclude_from_calculate'])) ? 0 : $v['amount'];
-            if ($v['amount'] > 0) {
-                $giftProduct = new \PayNL\Sdk\Model\Product();
-                $giftProduct->setId($v['gift_cert_id']);
-                $giftProduct->setDescription($v['gift_cert_code']);
-                $giftProduct->setType(\PayNL\Sdk\Model\Product::TYPE_DISCOUNT);
-                $giftProduct->setAmount(-$v['amount']);
-                $giftProduct->setCurrency($currency);
-                $giftProduct->setQuantity(1);
-                $giftProduct->setVatPercentage(0);
-
-                $products->addProduct($giftProduct);
-            }
-        }
     }
 
     $order->setProducts($products);
@@ -487,20 +498,77 @@ function paynl_nearest($number, $numbers)
     return $output;
 }
 
+/**
+ * @return string
+ */
 function getApiToken()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['token_api'];
 }
 
+/**
+ * @return string
+ */
 function getTokencode()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['token_code'];
 }
 
+/**
+ * @return string
+ */
 function getServiceId()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['service_id'];
+}
+
+/**
+ * @return int
+ */
+function getTestMode()
+{
+    $paynl_setting = Registry::get('addons.paynl_addon');
+    if (empty($paynl_setting['test_mode'])) {
+        return 0;
+    }
+    return $paynl_setting['test_mode'] == 'Y' ? 1 : 0;
+}
+
+/**
+ * @return array
+ */
+function fn_paynl_getMultiCore()
+{
+    try {
+        $serviceId = getServiceId();
+        $tokenCode = getTokencode();
+        $apiToken = getApiToken();
+
+        $config = getConfig($tokenCode, $apiToken);
+
+        $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
+            ->setConfig($config)
+            ->start();
+
+        $cores = $serviceConfig->getCores();
+        $formattedCores = array();
+
+        foreach ($cores as $core) {
+            if ($core['status'] === 'ACTIVE') {
+                $formattedCores[] = array(
+                    'domain' => $core['domain'],
+                    'name' => $core['label']
+                );
+            }
+        }
+
+        return $formattedCores;
+
+    } catch (Exception $ex) {
+        fn_set_notification('E', __('error'), 'Could not fetch TGU cores: ' . $ex->getMessage());
+        return array();
+    }
 }

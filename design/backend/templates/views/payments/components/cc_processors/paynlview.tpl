@@ -1,34 +1,7 @@
-{assign var="credential" value=''|fn_getCredential }
 {assign var="paymentMethods" value=''|fn_getpaymentMethods }
+{assign var="multiCore" value=''|fn_paynl_getMultiCore }
 <h3>PAY.</h3>
 <p/>
-
-{*Token Code*}
-<div class="form-field">
-    <label  for="token_code">Token Code:</label>
-    <div class="control-group">
-        <input onchange="getPaymentProfiles();" type="text" name="payment_data[processor_params][token_code]" id="token_code" value="{if (isset($processor_params['token_code']))}{$processor_params['token_code']}{else}{$credential['token_code']}{/if}"  size="12">
-    </div>
-</div>
-
-{*Service Id*}
-<div class="form-field">
-    <label  for="service_id">Service ID:</label>
-    <div class="control-group">
-        <input onchange="getPaymentProfiles();" type="text" name="payment_data[processor_params][service_id]" id="service_id" value="{if (isset($processor_params['service_id']))}{$processor_params['service_id']}{else}{$credential['service_id']}{/if}"  size="12">
-    </div>
-</div>
-
-{*Token api*}
-<div class="form-field">
-    <label  for="token_api">API Token:</label>
-    <div class="control-group">
-        <input onchange="getPaymentProfiles();" type="text" name="payment_data[processor_params][token_api]" id="token_api" value="{if  (isset($processor_params['token_api']))}{$processor_params['token_api']}{else}{$credential['token_api']}{/if}"  size="40">
-    </div>
-</div>
-
-
-
 {* Options *}
 <div class="form-field">
     <label for="payNL_option">Payment Method:</label>
@@ -38,6 +11,21 @@
             {if is_array($paymentMethods) && !empty($paymentMethods)}
                 {foreach from=$paymentMethods item="method"}
                     <option value="{$method.id}" {if isset($processor_params.optionId) && $processor_params.optionId == $method.id}selected="selected"{/if}>{$method.name}</option>
+                {/foreach}
+            {/if}
+        </select>
+    </div>
+</div>
+
+{* Multicore *}
+<div class="form-field">
+    <label for="payNL_multicore">Multicore:</label>
+    <div class="control-group">
+        <select name="payment_data[processor_params][multicore]" id="payNL_multicore">
+            <option value="">Select multicore...</option>
+            {if is_array($multiCore) && !empty($multiCore)}
+                {foreach from=$multiCore item="core"}
+                    <option value="{$core.domain}" {if isset($processor_params.multicore) && $processor_params.multicore == $core.domain}selected="selected"{/if}>{$core.name}</option>
                 {/foreach}
             {/if}
         </select>
