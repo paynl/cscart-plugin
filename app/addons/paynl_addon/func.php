@@ -5,13 +5,12 @@ use Tygh\Registry;
 require_once(dirname(__FILE__) . '/paynl/classes/Pay/vendor/autoload.php');
 
 
-function getConfig($tokenCode = null, $apiToken = null, $useCore = false)
+function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core = false)
 {
     $config = new \PayNL\Sdk\Config\Config();
     $config->setUsername($tokenCode);
     $config->setPassword($apiToken);
 
-    $core = '';
     if (!empty($core) && $useCore === true) {
         $config->setCore($core);
     }
@@ -95,7 +94,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
 {
     $currency = CART_PRIMARY_CURRENCY;
 
-    $config = getConfig(getTokencode(), getApiToken(), true);
+    $config = getConfig(getTokencode(), getApiToken(), true, $processor_data['processor_params']['multicore']);
     
     // Create the order request
     $request = new \PayNL\Sdk\Model\Request\OrderCreateRequest();
@@ -107,8 +106,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $request->setExchangeUrl($exchangeUrl);
     $request->setDescription($order_info['order_id']);
     $request->setReference($order_info['order_id']);
-    
-    // Set payment method if specified
+
     if (!empty($processor_data['processor_params']['optionId'])) {
         $request->setPaymentMethodId((int)$processor_data['processor_params']['optionId']);
     }
@@ -515,7 +513,7 @@ function fn_paynl_getMultiCore()
         foreach ($cores as $core) {
             if ($core['status'] === 'ACTIVE') {
                 $formattedCores[] = array(
-                    'id' => $core['domain'],
+                    'domain' => $core['domain'],
                     'name' => $core['label']
                 );
             }
