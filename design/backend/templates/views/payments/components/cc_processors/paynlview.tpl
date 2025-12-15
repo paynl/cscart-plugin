@@ -51,7 +51,7 @@
             <option value="">Select multicore...</option>
             {if is_array($multiCore) && !empty($multiCore)}
                 {foreach from=$multiCore item="core"}
-                    <option value="{$core.id}" {if $selected == $core.id}selected="selected"{/if}>{$core.name}</option>
+                    <option value="{$core.domain}" {if $selected == $core.domain}selected="selected"{/if}>{$core.name}</option>
                 {/foreach}
             {/if}
         </select>
