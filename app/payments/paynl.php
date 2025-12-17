@@ -22,14 +22,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
         die();
     }
 
-    $action = $_REQUEST['object']['status']['action'] ?? '';
-    $payNLTransactionID = $_REQUEST['object']['orderId'] ?? '';
-    if (strtolower($action) == 'pending' || strtolower($action) == 'refund:received' || empty($action) || empty($payNLTransactionID)) {
-        die('TRUE|Ignoring ' . (empty($payNLTransactionID) ? ', no order id' : $action));
-    }
-
     $order_info = fn_get_order_info($orderId, true);
-    $csCartOrderAmount = (int)str_replace('.', '', $order_info['total']) / 100;
     $processor_data = fn_get_processor_data($order_info['payment_id']);
     $statuses = $processor_data['processor_params']['statuses'];
 
@@ -40,11 +33,14 @@ if (defined('PAYMENT_NOTIFICATION')) {
             $exchange = new Exchange();
             $payOrder = $exchange->process($config);
 
-            $alreadyPaid = fn_isAlreadyPAID($payOrder->getId()) || $order_info['status'] == 'P';
-            
-            if ($alreadyPaid) {
-                $exchange->setResponse(true, 'Order already PAID');
+            $payOrderId = '';
+            try {
+                $payOrderId = $payOrder->getId();
+            } catch (Error $e) {
+                $payOrderId = $_REQUEST['object']['orderId'] ?? '';
             }
+
+            $alreadyPaid = fn_isAlreadyPAID($payOrderId) || $order_info['status'] == 'P';
             
             $responseResult = true;
             $responseMessage = 'Processed';
@@ -54,6 +50,14 @@ if (defined('PAYMENT_NOTIFICATION')) {
                 $responseMessage = 'Processed pending';
                 $idstate = $statuses['pending'] ?? 'N';
                 
+            } elseif ($payOrder->isRefunded()) {
+                $responseResult = true;
+                $responseMessage = 'Ignoring refund';
+
+            } elseif ($alreadyPaid) {
+                $responseResult = true;
+                $responseMessage = 'Order already PAID';
+
             } elseif ($payOrder->isPaid() || $payOrder->isAuthorized()) {
                 $responseMessage = 'Processed paid. Order: ' . $payOrder->getReference();
                 $idstate = $statuses['paid'] ?? $statuses['authorize'] ?? 'P';
@@ -62,7 +66,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
                     fn_change_order_status($orderId, $idstate);
                 }
                 
-                fn_updatePayTransaction($payOrder->getId(), $payOrder->isPaid() ? 'PAID' : 'AUTHORIZE');
+                fn_updatePayTransaction($payOrderId, $payOrder->isPaid() ? 'PAID' : 'AUTHORIZE');
                 
                 $pp_response = array(
                     'order_status' => $idstate, 
@@ -79,8 +83,16 @@ if (defined('PAYMENT_NOTIFICATION')) {
                 if (fn_check_payment_script('paynl.php', $orderId)) {
                     fn_change_order_status($orderId, $idstate);
                 }
-                fn_updatePayTransaction($payOrder->getId(), 'CANCEL');
-                
+                fn_updatePayTransaction($payOrderId, 'CANCEL');
+            } elseif ($payOrder->isDenied()) {
+                $responseResult = true;
+                $responseMessage = 'Processed denied';
+                $idstate = $statuses['cancelled'] ?? 'I';
+
+                if (fn_check_payment_script('paynl.php', $orderId)) {
+                    fn_change_order_status($orderId, $idstate);
+                }
+                fn_updatePayTransaction($payOrderId, 'DENIED');
             } else {
                 $responseResult = true;
                 $responseMessage = 'No action defined for payment state ' . $payOrder->getStatusCode();
