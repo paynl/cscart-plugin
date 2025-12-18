@@ -24,9 +24,6 @@ function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core 
 function fn_getPaymentMethods()
 {
     try {
-
-        $paynl_settings = Registry::get('addons.paynl_addon');
-
         $serviceId = getServiceId();
         $tokenCode = getTokencode();
         $apiToken = getApiToken();
