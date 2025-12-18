@@ -17,14 +17,22 @@ if (defined('PAYMENT_NOTIFICATION')) {
     $order_info = null;
     $orderId = intval($_REQUEST['csCartOrderId']);
 
-    if ($mode == 'finish') {
-        fn_order_placement_routines('route', $orderId, false);
-        die();
-    }
-
     $order_info = fn_get_order_info($orderId, true);
     $processor_data = fn_get_processor_data($order_info['payment_id']);
     $statuses = $processor_data['processor_params']['statuses'];
+
+    if ($mode == 'finish') {
+        if (in_array($order_info['status'], ['I', 'D'])) {
+            $pp_response = [];
+            $pp_response['reason_text'] = $order_info['status'] == 'I'
+                ? 'The payment has been cancelled, please try again '
+                : 'Unfortunately the payment has been denied. Please try again or use another payment method. ';
+            fn_finish_payment($orderId, $pp_response);
+        }
+
+        fn_order_placement_routines('route', $orderId, false);
+        die();
+    }
 
     if ($mode == 'exchange') {
         try {
@@ -87,7 +95,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
             } elseif ($payOrder->isDenied()) {
                 $responseResult = true;
                 $responseMessage = 'Processed denied';
-                $idstate = $statuses['cancelled'] ?? 'I';
+                $idstate = 'D';
 
                 if (fn_check_payment_script('paynl.php', $orderId)) {
                     fn_change_order_status($orderId, $idstate);
