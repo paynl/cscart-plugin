@@ -1,0 +1,17 @@
+/images/
+/js/
+/upgrades/
+/var/
+/.htaccess
+/admin.php
+/api.php
+/changelog.txt
+/config.local.php
+/config.php
+/copyright.txt
+/index.php
+/init.php
+/install.html
+/robots.txt
+/store_closed.html
+/vendor.php

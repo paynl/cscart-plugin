@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <addon scheme="2.0">
 	<id>paynl_addon</id>
-	<name>PAY.</name>
-	<description>PAY. Gateway addon</description>
+	<name>Pay.</name>
+	<description>Pay. Gateway addon</description>
 	<version>2.0.0</version>
 	<priority>1000</priority>
         <settings layout="separate">
