@@ -29,6 +29,11 @@
                     <type>input</type>
                     <tooltip>The api token used to communicate with the PAY. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
                   </item>
+                  <item id="test_mode">
+                    <name>Test mode</name>
+                    <type>checkbox</type>
+                    <tooltip>Enable to start transactions in test mode </tooltip>
+                  </item>
                 </items>
               </section>
           </sections>
@@ -52,7 +57,7 @@
        <item for="install">DELETE FROM ?:payment_processors WHERE processor = 'Pay.nl'</item> 
        <item for="install">
         INSERT INTO `?:payment_processors` (`processor_id`, `processor`, `processor_script`, `processor_template`, `admin_template`, `callback`, `type`) VALUES 
-        ('', 'Pay.nl', 'paynl.php', 'views/orders/components/payments/paynl.tpl', 'paynlview.tpl', 'Y', 'P') 
+        ('', 'Pay.nl', 'paynl.php', 'views/orders/components/payments/empty.tpl', 'paynlview.tpl', 'Y', 'P')
        </item>
         <item for="uninstall">DELETE FROM ?:payments WHERE processor_id IN (SELECT processor_id FROM ?:payment_processors WHERE processor = 'Pay.nl')</item>                
 	<item for="uninstall">DELETE FROM ?:payment_processors WHERE processor = 'Pay.nl'</item> 

@@ -5,27 +5,25 @@ use Tygh\Registry;
 require_once(dirname(__FILE__) . '/paynl/classes/Pay/vendor/autoload.php');
 
 
-function getConfig($tokenCode = null, $apiToken = null)
+function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core = false)
 {
     $config = new \PayNL\Sdk\Config\Config();
     $config->setUsername($tokenCode);
     $config->setPassword($apiToken);
 
+    if (!empty($core) && $useCore === true) {
+        $config->setCore($core);
+    }
+
     return $config;
 }
 
-function fn_getCredential($var)
-{
-    $paynl_setting = Registry::get('addons.paynl_addon');
-    return array('token_api' => getApiToken(),
-        'service_id' => getServiceId(),
-        'token_code' => getTokencode());
-}
-
+/**
+ * @return array
+ */
 function fn_getPaymentMethods()
 {
     try {
-        $paynl_settings = Registry::get('addons.paynl_addon');
         $serviceId = getServiceId();
         $tokenCode = getTokencode();
         $apiToken = getApiToken();
@@ -69,20 +67,36 @@ function fn_get_ideal_banks($processor_data)
     }
 }
 
-
+/**
+ * @param $payNLTransactionID
+ * @param $processor_data
+ * @return array[]|void
+ */
 function fn_paynl_getStatus($payNLTransactionID, $processor_data)
 {
-    $payApiInfo = new Pay_Api_Status();
-    $payApiInfo->setApiToken($processor_data['processor_params']['token_api']);
-    $payApiInfo->setServiceId($processor_data['processor_params']['service_id']);
-    $payApiInfo->setTransactionId($payNLTransactionID);
     try {
-        $result = $payApiInfo->doRequest();
+        $tokenCode = getTokencode();
+        $apiToken = getApiToken();
+        $config = getConfig($tokenCode, $apiToken);
+
+        $request = new \PayNL\Sdk\Model\Request\TransactionStatusRequest($payNLTransactionID);
+        $request->setConfig($config);
+        $payOrder = $request->start();
+        
+        return array(
+            'paymentDetails' => array(
+                'state' => $payOrder->getStatus(),
+                'amountOriginal' => array(
+                    'value' => $payOrder->getAmount()
+                ),
+                'identifierName' => $payOrder->getPaymentMethod(),
+                'identifierPublic' => $payOrder->getReference()
+            )
+        );
     } catch (Exception $ex) {
         fn_set_notification('E', __('error'), $ex->getMessage());
         fn_redirect('/index.php?dispatch=checkout.checkout');
     }
-    return $result;
 }
 
 function getObjectData()
@@ -94,66 +108,98 @@ function getObjectData()
     return substr('cscart ' . $payPlugin . ' | ' . $cscartVersion . ' | ' . $phpVersion, 0, 64);
 }
 
+/**
+ * @param $order_id
+ * @param $order_info
+ * @param $processor_data
+ * @param $exchangeUrl
+ * @param $finishUrl
+ * @return array|void
+ * @throws Exception
+ */
 function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl)
 {
     $currency = CART_PRIMARY_CURRENCY;
-    $payNL = new Pay_Api_Start();
-    $payNL->setApiToken($processor_data['processor_params']['token_api']);
-    $payNL->setServiceId($processor_data['processor_params']['service_id']);
-    $payNL->setAmount(floatval($order_info['total']) * 100);
-    $payNL->setPaymentOptionId($processor_data['processor_params']['optionId']);
-    $payNL->setObject(getObjectData());
 
-    $payNL->setExchangeUrl($exchangeUrl);
-    $payNL->setCurrency($currency);
-    $payNL->setFinishUrl($finishUrl);
-    $payNL->setDescription($order_info['order_id']);
-    $payNL->setOrderNumber($order_info['order_id']);
+    $config = getConfig(getTokencode(), getApiToken(), true, $processor_data['processor_params']['multicore']);
+    
+    // Create the order request
+    $request = new \PayNL\Sdk\Model\Request\OrderCreateRequest();
+    $request->setConfig($config);
+    $request->setServiceId(getServiceId());
+    $request->setAmount(floatval($order_info['total']));
+    $request->setTestmode(getTestMode());
+    $request->setCurrency($currency);
+    $request->setReturnurl($finishUrl);
+    $request->setExchangeUrl($exchangeUrl);
+    $request->setDescription($order_info['order_id']);
+    $request->setReference($order_info['order_id']);
 
+    if (!empty($processor_data['processor_params']['optionId'])) {
+        $request->setPaymentMethodId((int)$processor_data['processor_params']['optionId']);
+    }
+    
+    // Create customer
+    $customer = new \PayNL\Sdk\Model\Customer();
+    $customer->setFirstName($order_info['s_firstname']);
+    $customer->setLastName($order_info['s_lastname']);
+    $customer->setEmail($order_info['email']);
+    $customer->setPhone($order_info['s_phone']);
+    $customer->setIpAddress($order_info['ip_address']);
+    $customer->setLanguage(strtoupper($order_info['lang_code']));
+    
+    if (!empty($order_info['birthday'])) {
+        $customer->setBirthDate($order_info['birthday']);
+    }
+    
+    $request->setCustomer($customer);
+
+    $order = new \PayNL\Sdk\Model\Order();
+    $order->setCountryCode($order_info['s_country']);
+    
+    // Shipping address
     $s_address = splitAddress(trim($order_info['s_address'] . ' ' . $order_info['s_address_2']));
+    $shippingAddress = new \PayNL\Sdk\Model\Address();
+    $shippingAddress->setCode('delivery');
+    $shippingAddress->setStreetName($s_address[0]);
+    $shippingAddress->setStreetNumber(substr($s_address[1], 0, 4));
+    $shippingAddress->setZipCode($order_info['s_zipcode']);
+    $shippingAddress->setCity($order_info['s_city']);
+    $shippingAddress->setCountryCode($order_info['s_country']);
+    $order->setDeliveryAddress($shippingAddress);
+    
+    // Billing address
     $b_address = splitAddress(trim($order_info['b_address'] . ' ' . $order_info['b_address_2']));
-    $payNL->setEnduser(array('accessCode' => $order_info['user_id'],
-            'language' => $order_info['lang_code'],
-            'initials' => $order_info['s_firstname'],
-            'lastName' => $order_info['s_lastname'],
-            'phoneNumber' => $order_info['s_phone'],
-            'dob' => $order_info['birthday'],
-            'emailAddress' => $order_info['email'],
-            'address' => array('streetName' => $s_address[0],
-                'streetNumber' => substr($s_address[1], 0, 4),
-                'zipCode' => $order_info['s_zipcode'],
-                'city' => $order_info['s_city'],
-                'countryCode' => $order_info['s_country']),
-            'invoiceAddress' => array('initials' => $order_info['b_firstname'],
-                'lastName' => $order_info['b_lastname'],
-                'streetName' => $b_address[0],
-                'streetNumber' => substr($b_address[1], 0, 4),
-                'zipCode' => $order_info['b_zipcode'],
-                'city' => $order_info['b_city'],
-                'countryCode' => $order_info['b_country']))
-    );
-    $payNL->setExtra1($order_id);
-
-    $payNL->setIpAddress($order_info['ip_address']);
-
+    $billingAddress = new \PayNL\Sdk\Model\Address();
+    $billingAddress->setCode('invoice');
+    $billingAddress->setStreetName($b_address[0]);
+    $billingAddress->setStreetNumber(substr($b_address[1], 0, 4));
+    $billingAddress->setZipCode($order_info['b_zipcode']);
+    $billingAddress->setCity($order_info['b_city']);
+    $billingAddress->setCountryCode($order_info['b_country']);
+    $order->setInvoiceAddress($billingAddress);
+    
+    // Products
+    $products = new \PayNL\Sdk\Model\Products();
+    
     foreach ($order_info['products'] as $key => $product) {
         $prices = paynl_getTaxForItem($order_info, $key);
         $taxPercent = empty($prices['price_excl']) ? 0 : ($prices['tax_amount'] / $prices['price_excl'] * 100);
-        $taxClass = paynl_getTaxClass($taxPercent);
-
-        $payNL->addProduct(
-            $product['product_id'],
-            $product['product'],
-            round($prices['price_incl'] * 100),
-            $product['amount'],
-            $taxClass
-        );
+        
+        $orderProduct = new \PayNL\Sdk\Model\Product();
+        $orderProduct->setId($product['product_id']);
+        $orderProduct->setDescription($product['product']);
+        $orderProduct->setType(\PayNL\Sdk\Model\Product::TYPE_ARTICLE);
+        $orderProduct->setAmount($prices['price_incl']);
+        $orderProduct->setCurrency($currency);
+        $orderProduct->setQuantity($product['amount']);
+        $orderProduct->setVatPercentage($taxPercent);
+        
+        $products->addProduct($orderProduct);
     }
-
 
     $payment_surcharge = paynl_getTaxForSurcharge($order_info);
     if ($payment_surcharge['price_incl'] > 0) {
-
         $item_name = $order_info['payment_method']['surcharge_title'];
         if (empty($item_name) && strtolower($order_info['lang_code']) == 'nl') {
             $item_name = 'Toeslag';
@@ -163,9 +209,16 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
 
         $taxPercent = $payment_surcharge['tax_amount'] / $payment_surcharge['price_excl'] * 100;
 
-        $taxClass = paynl_getTaxClass($taxPercent);
-
-        $payNL->addProduct(substr($item_name, 0, 24), $item_name, round($payment_surcharge['price_incl'] * 100), 1, $taxClass);
+        $surchargeProduct = new \PayNL\Sdk\Model\Product();
+        $surchargeProduct->setId(substr($item_name, 0, 24));
+        $surchargeProduct->setDescription($item_name);
+        $surchargeProduct->setType(\PayNL\Sdk\Model\Product::TYPE_HANDLING);
+        $surchargeProduct->setAmount($payment_surcharge['price_incl']);
+        $surchargeProduct->setCurrency($currency);
+        $surchargeProduct->setQuantity(1);
+        $surchargeProduct->setVatPercentage($taxPercent);
+        
+        $products->addProduct($surchargeProduct);
     }
 
     // Shipping
@@ -173,28 +226,76 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     if ($shipping_cost['price_incl'] > 0) {
         $taxPercent = $shipping_cost['tax_amount'] / $shipping_cost['price_excl'] * 100;
 
-        $taxClass = paynl_getTaxClass($taxPercent);
-
-        $payNL->addProduct('shipping_cost', __('shipping_cost'), round($shipping_cost['price_incl'] * 100), 1, $taxClass);
+        $shippingProduct = new \PayNL\Sdk\Model\Product();
+        $shippingProduct->setId('shipping_cost');
+        $shippingProduct->setDescription(__('shipping_cost'));
+        $shippingProduct->setType(\PayNL\Sdk\Model\Product::TYPE_SHIPPING);
+        $shippingProduct->setAmount($shipping_cost['price_incl']);
+        $shippingProduct->setCurrency($currency);
+        $shippingProduct->setQuantity(1);
+        $shippingProduct->setVatPercentage($taxPercent);
+        
+        $products->addProduct($shippingProduct);
     }
-    //gift
+
     if (!empty($order_info['use_gift_certificates'])) {
         foreach ($order_info['use_gift_certificates'] as $k => $v) {
-            $payNL->addProduct($v['gift_cert_id'], $k, floatval($v['cost']) * (-100), 1, 'N');
+            $giftProduct = new \PayNL\Sdk\Model\Product();
+            $giftProduct->setId($v['gift_cert_id']);
+            $giftProduct->setDescription($k);
+            $giftProduct->setType(\PayNL\Sdk\Model\Product::TYPE_DISCOUNT);
+            $giftProduct->setAmount(-floatval($v['cost']));
+            $giftProduct->setCurrency($currency);
+            $giftProduct->setQuantity(1);
+            $giftProduct->setVatPercentage(0);
+            
+            $products->addProduct($giftProduct);
         }
     }
 
-    if (isset($order_info['subtotal_discount']) && $order_info['subtotal_discount'] > 0)
-        $payNL->addProduct(__('discount'), __('discount'), $order_info['subtotal_discount'] * -100, 1, 'N');
-    if (!empty($order_info['gift_certificates'])) {
-        foreach ($order_info['gift_certificates'] as $k => $v) {
-            $v['amount'] = (!empty($v['extra']['exclude_from_calculate'])) ? 0 : $v['amount'];
-            $payNL->addProduct($v['gift_cert_id'], $v['gift_cert_code'], (-100) * $v['amount'], 1, 'N');
-        }
+    if (isset($order_info['subtotal_discount']) && $order_info['subtotal_discount'] > 0) {
+        $discountProduct = new \PayNL\Sdk\Model\Product();
+        $discountProduct->setId('discount');
+        $discountProduct->setDescription(__('discount'));
+        $discountProduct->setType(\PayNL\Sdk\Model\Product::TYPE_DISCOUNT);
+        $discountProduct->setAmount(-$order_info['subtotal_discount']);
+        $discountProduct->setCurrency($currency);
+        $discountProduct->setQuantity(1);
+        $discountProduct->setVatPercentage(0);
+        
+        $products->addProduct($discountProduct);
     }
+
+    $order->setProducts($products);
+    $request->setOrder($order);
+    
+    // Set stats/object data
+    $stats = new \PayNL\Sdk\Model\Stats();
+    $stats->setObject(getObjectData());
+    $stats->setExtra1($order_id);
+    $request->setStats($stats);
 
     try {
-        return $payNL->doRequest();
+        $payOrder = $request->start();
+        
+        // Return data in format expected by existing code
+        return array(
+            'transaction' => array(
+                'transactionId' => $payOrder->getId(),
+                'paymentURL' => $payOrder->getPaymentUrl(),
+                'popupAllowed' => false,
+                'popupHeight' => 0,
+                'popupWidth' => 0
+            ),
+            'request' => array(
+                'result' => '1',
+                'errorId' => '',
+                'errorMessage' => ''
+            )
+        );
+    } catch (\PayNL\Sdk\Exception\PayException $ex) {
+        fn_set_notification('E', __('error'), $ex->getFriendlyMessage());
+        fn_redirect('/index.php?dispatch=checkout.checkout');
     } catch (Exception $ex) {
         fn_set_notification('E', __('error'), $ex->getMessage());
         fn_redirect('/index.php?dispatch=checkout.checkout');
@@ -385,20 +486,77 @@ function paynl_nearest($number, $numbers)
     return $output;
 }
 
+/**
+ * @return string
+ */
 function getApiToken()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['token_api'];
 }
 
+/**
+ * @return string
+ */
 function getTokencode()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['token_code'];
 }
 
+/**
+ * @return string
+ */
 function getServiceId()
 {
     $paynl_setting = Registry::get('addons.paynl_addon');
     return $paynl_setting['service_id'];
+}
+
+/**
+ * @return int
+ */
+function getTestMode()
+{
+    $paynl_setting = Registry::get('addons.paynl_addon');
+    if (empty($paynl_setting['test_mode'])) {
+        return 0;
+    }
+    return $paynl_setting['test_mode'] == 'Y' ? 1 : 0;
+}
+
+/**
+ * @return array
+ */
+function fn_paynl_getMultiCore()
+{
+    try {
+        $serviceId = getServiceId();
+        $tokenCode = getTokencode();
+        $apiToken = getApiToken();
+
+        $config = getConfig($tokenCode, $apiToken);
+
+        $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
+            ->setConfig($config)
+            ->start();
+
+        $cores = $serviceConfig->getCores();
+        $formattedCores = array();
+
+        foreach ($cores as $core) {
+            if ($core['status'] === 'ACTIVE') {
+                $formattedCores[] = array(
+                    'domain' => $core['domain'],
+                    'name' => $core['label']
+                );
+            }
+        }
+
+        return $formattedCores;
+
+    } catch (Exception $ex) {
+        fn_set_notification('E', __('error'), 'Could not fetch TGU cores: ' . $ex->getMessage());
+        return array();
+    }
 }
