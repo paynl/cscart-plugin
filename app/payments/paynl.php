@@ -101,6 +101,15 @@ if (defined('PAYMENT_NOTIFICATION')) {
                     fn_change_order_status($orderId, $idstate);
                 }
                 fn_updatePayTransaction($payOrderId, 'DENIED');
+            } elseif ($payOrder->isBeingVerified()) {
+                $responseResult = true;
+                $responseMessage = 'Processed verify';
+                $idstate = 'O';
+
+                if (fn_check_payment_script('paynl.php', $orderId)) {
+                    fn_change_order_status($orderId, $idstate);
+                }
+                fn_updatePayTransaction($payOrderId, 'VERIFY');
             } else {
                 $responseResult = true;
                 $responseMessage = 'No action defined for payment state ' . $payOrder->getStatusCode();
