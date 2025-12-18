@@ -24,26 +24,38 @@ function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core 
 function fn_getPaymentMethods()
 {
     try {
+
+        $paynl_settings = Registry::get('addons.paynl_addon');
+
         $serviceId = getServiceId();
         $tokenCode = getTokencode();
         $apiToken = getApiToken();
 
         $config = getConfig($tokenCode, $apiToken);
 
-        $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
-            ->setConfig($config)
-            ->start();
+        try {
+            $serviceConfig = (new \PayNL\Sdk\Model\Request\ServiceGetConfigRequest($serviceId))
+                ->setConfig($config)
+                ->start();
 
-        $paymentMethods = $serviceConfig->getPaymentMethods();
-        $formattedMethods = array();
+            $paymentMethods = $serviceConfig->getPaymentMethods();
+            $formattedMethods = array();
 
-        foreach ($paymentMethods as $method)
+            foreach ($paymentMethods as $method) {
+                $formattedMethods[] = array(
+                    'id' => $method->getId(),
+                    'name' => $method->getName()
+                );
+            }
+
+
+        } catch (Exception $ex)
         {
-            $formattedMethods[] = array(
-                'id' => $method->getId(),
-                'name' => $method->getName()
-            );
+            //todo: log error exception
+
+            $formattedMethods = [];
         }
+
 
         return $formattedMethods;
 
@@ -82,7 +94,7 @@ function fn_paynl_getStatus($payNLTransactionID, $processor_data)
         $request = new \PayNL\Sdk\Model\Request\TransactionStatusRequest($payNLTransactionID);
         $request->setConfig($config);
         $payOrder = $request->start();
-        
+
         return array(
             'paymentDetails' => array(
                 'state' => $payOrder->getStatus(),
@@ -138,7 +150,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     if (!empty($processor_data['processor_params']['optionId'])) {
         $request->setPaymentMethodId((int)$processor_data['processor_params']['optionId']);
     }
-    
+
     // Create customer
     $customer = new \PayNL\Sdk\Model\Customer();
     $customer->setFirstName($order_info['s_firstname']);
@@ -147,16 +159,16 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $customer->setPhone($order_info['s_phone']);
     $customer->setIpAddress($order_info['ip_address']);
     $customer->setLanguage(strtoupper($order_info['lang_code']));
-    
+
     if (!empty($order_info['birthday'])) {
         $customer->setBirthDate($order_info['birthday']);
     }
-    
+
     $request->setCustomer($customer);
 
     $order = new \PayNL\Sdk\Model\Order();
     $order->setCountryCode($order_info['s_country']);
-    
+
     // Shipping address
     $s_address = splitAddress(trim($order_info['s_address'] . ' ' . $order_info['s_address_2']));
     $shippingAddress = new \PayNL\Sdk\Model\Address();
@@ -167,7 +179,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $shippingAddress->setCity($order_info['s_city']);
     $shippingAddress->setCountryCode($order_info['s_country']);
     $order->setDeliveryAddress($shippingAddress);
-    
+
     // Billing address
     $b_address = splitAddress(trim($order_info['b_address'] . ' ' . $order_info['b_address_2']));
     $billingAddress = new \PayNL\Sdk\Model\Address();
@@ -178,14 +190,14 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $billingAddress->setCity($order_info['b_city']);
     $billingAddress->setCountryCode($order_info['b_country']);
     $order->setInvoiceAddress($billingAddress);
-    
+
     // Products
     $products = new \PayNL\Sdk\Model\Products();
-    
+
     foreach ($order_info['products'] as $key => $product) {
         $prices = paynl_getTaxForItem($order_info, $key);
         $taxPercent = empty($prices['price_excl']) ? 0 : ($prices['tax_amount'] / $prices['price_excl'] * 100);
-        
+
         $orderProduct = new \PayNL\Sdk\Model\Product();
         $orderProduct->setId($product['product_id']);
         $orderProduct->setDescription($product['product']);
@@ -194,7 +206,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $orderProduct->setCurrency($currency);
         $orderProduct->setQuantity($product['amount']);
         $orderProduct->setVatPercentage($taxPercent);
-        
+
         $products->addProduct($orderProduct);
     }
 
@@ -217,7 +229,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $surchargeProduct->setCurrency($currency);
         $surchargeProduct->setQuantity(1);
         $surchargeProduct->setVatPercentage($taxPercent);
-        
+
         $products->addProduct($surchargeProduct);
     }
 
@@ -234,7 +246,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $shippingProduct->setCurrency($currency);
         $shippingProduct->setQuantity(1);
         $shippingProduct->setVatPercentage($taxPercent);
-        
+
         $products->addProduct($shippingProduct);
     }
 
@@ -248,7 +260,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
             $giftProduct->setCurrency($currency);
             $giftProduct->setQuantity(1);
             $giftProduct->setVatPercentage(0);
-            
+
             $products->addProduct($giftProduct);
         }
     }
@@ -262,13 +274,13 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         $discountProduct->setCurrency($currency);
         $discountProduct->setQuantity(1);
         $discountProduct->setVatPercentage(0);
-        
+
         $products->addProduct($discountProduct);
     }
 
     $order->setProducts($products);
     $request->setOrder($order);
-    
+
     // Set stats/object data
     $stats = new \PayNL\Sdk\Model\Stats();
     $stats->setObject(getObjectData());
@@ -277,7 +289,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
 
     try {
         $payOrder = $request->start();
-        
+
         // Return data in format expected by existing code
         return array(
             'transaction' => array(
