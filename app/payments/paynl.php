@@ -1,7 +1,7 @@
 <?php
 
 /**
- *    PAY.
+ *    Pay.
  *    Date: 11-06-2021
  *    Version: 1.0.7
  */

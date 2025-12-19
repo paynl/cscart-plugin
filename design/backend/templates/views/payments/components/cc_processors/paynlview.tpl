@@ -1,6 +1,6 @@
 {assign var="paymentMethods" value=''|fn_getpaymentMethods }
 {assign var="multiCore" value=''|fn_paynl_getMultiCore }
-<h3>PAY.</h3>
+<h3>Pay.</h3>
 <p/>
 {* Options *}
 <div class="form-field">

@@ -35,7 +35,7 @@
                   <item id="token_api">
                     <name>API token</name>
                     <type>input</type>
-                    <tooltip>The api token used to communicate with the PAY. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
+                    <tooltip>The api token used to communicate with the Pay. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
                   </item>
                   <item id="test_mode">
                     <name>Test mode</name>
