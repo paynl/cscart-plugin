@@ -4,7 +4,13 @@ use Tygh\Registry;
 
 require_once(dirname(__FILE__) . '/paynl/classes/Pay/vendor/autoload.php');
 
-
+/**
+ * @param $tokenCode
+ * @param $apiToken
+ * @param $useCore
+ * @param $core
+ * @return \PayNL\Sdk\Config\Config
+ */
 function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core = false)
 {
     $config = new \PayNL\Sdk\Config\Config();
@@ -45,14 +51,10 @@ function fn_getPaymentMethods()
                 );
             }
 
-
-        } catch (Exception $ex)
-        {
+        } catch (Exception $ex) {
             //todo: log error exception
-
             $formattedMethods = [];
         }
-
 
         return $formattedMethods;
 
@@ -62,9 +64,12 @@ function fn_getPaymentMethods()
     }
 }
 
+/**
+ * @param $processor_data
+ * @return mixed|void
+ */
 function fn_get_ideal_banks($processor_data)
 {
-
     $service = new Pay_Api_Getservice();
     $service->setApiToken($processor_data['processor_params']['token_api']);
     $service->setServiceId($processor_data['processor_params']['service_id']);
@@ -108,6 +113,9 @@ function fn_paynl_getStatus($payNLTransactionID, $processor_data)
     }
 }
 
+/**
+ * @return false|string
+ */
 function getObjectData()
 {
     $phpVersion = substr(phpversion(), 0, 3);

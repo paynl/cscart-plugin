@@ -6,7 +6,7 @@
 	<version>2.0.0</version>
     <compatibility>
         <core_version>
-            <min>4.19.1</min>
+            <min>4.17.1</min>
         </core_version>
         <php_version>
             <min>8.1</min>
@@ -35,7 +35,7 @@
                   <item id="token_api">
                     <name>API token</name>
                     <type>input</type>
-                    <tooltip>The api token used to communicate with the PAY. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
+                    <tooltip>The api token used to communicate with the Pay. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
                   </item>
                   <item id="test_mode">
                     <name>Test mode</name>

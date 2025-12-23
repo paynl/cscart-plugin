@@ -1,11 +1,11 @@
 <p align="center">
   <img src="https://www.pay.nl/uploads/1/brands/main_logo.png" />
 </p>
-<h1 align="center">PAY. CS-Cart plugin</h1>
+<h1 align="center">Pay. CS-Cart plugin</h1>
 
 # Description
 
-With the PAY. plugin you can easily add different payment methods to your CS-Cart webshop. Go to https://www.pay.nl (Dutch) for an overview of all our features and services, or visit https://docs.pay.nl/plugins#cs-cart for more information.
+With the Pay. plugin you can easily add different payment methods to your CS-Cart webshop. Go to https://www.pay.nl (Dutch) for an overview of all our features and services, or visit https://docs.pay.nl/plugins#cs-cart for more information.
 
 - [Description](#description)
 - [Available payment methods](#available-payment-methods)
@@ -29,8 +29,8 @@ Bank Transfer |       Nexi       | GivaCard |        |  |
 
 # Requirements
 
-    Minimum PHP Version: PHP 7.1
-    Tested up to CSCart 4.10.2
+    Minimum PHP Version: PHP 8.1
+    Tested up to CSCart 4.17.1
 
 
 # Installation
@@ -48,7 +48,7 @@ There is also an extended installation <a href="https://github.com/paynl/cscart-
 3. Scroll down or search for Pay.nl
 4. Activate the plugin
 5. Click on the blue pay.nl link
-6. Enter the API token and serviceID (these can be found in the <a href="https://admin.pay.nl/programs/programs">PAY. Admin Panel</a> )
+6. Enter the API token and serviceID (these can be found in the <a href="https://admin.pay.nl/programs/programs">Pay. Admin Panel</a> )
 7. Save the settings
 8. Go to *Administration* > *Payment methods*
 8. On the top right of the page click on the *+* button
