@@ -36,9 +36,9 @@ Bank Transfer |       Nexi       | GivaCard |        |  |
 # Installation
 #### Upgrading
 
-Version 2.0.0 of the CS-Cart plugin has made significant changes to the payment processing. Therefore, it is important that the settings are checked after you've made the upgrade to the new plugin.
-There is a new value in the addon settings called "Token Code" that is requiered to start transactions with this version. Without this setting the plugin will not work.
-If you are missing this option after updating the plugin we reccomend you uninstall and then re-install the plugin again. This will reset your payment methods so make sure to note down your current settings before proceeding.
+Version 2.0.0 of the CS-Cart plugin has made significant changes to the payment processing. Therefore, it is important that the settings are checked after you've made the upgrade to the new version of the plugin.<br>
+There is a new value in the addon settings called "Token Code" that is requiered to start transactions with this version. Without this setting the plugin will not work.<br>
+If you are missing this option after updating the plugin we reccomend you uninstall and then re-install the plugin again in the admin of CS-Cart . This will fix it but will also reset your payment methods so make sure to note down your current settings before proceeding.
 
 #### Installing
 
