@@ -153,7 +153,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $customer->setFirstName($order_info['s_firstname']);
     $customer->setLastName($order_info['s_lastname']);
     $customer->setEmail($order_info['email']);
-    $customer->setPhone($order_info['s_phone']);
+    $customer->setPhone(isset($order_info['s_phone']) ? $order_info['s_phone'] : '');
     $customer->setIpAddress($order_info['ip_address']);
     $customer->setLanguage(strtoupper($order_info['lang_code']));
 
@@ -167,22 +167,22 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $order->setCountryCode($order_info['s_country']);
 
     // Shipping address
-    $s_address = splitAddress(trim($order_info['s_address'] . ' ' . $order_info['s_address_2']));
+    $s_address = paynl_split_address(trim($order_info['s_address'] . ' ' . $order_info['s_address_2']));
     $shippingAddress = new \PayNL\Sdk\Model\Address();
     $shippingAddress->setCode('delivery');
-    $shippingAddress->setStreetName($s_address[0]);
-    $shippingAddress->setStreetNumber(substr($s_address[1], 0, 4));
+    $shippingAddress->setStreetName($s_address['street']);
+    $shippingAddress->setStreetNumber(substr($s_address['number'], 0, 4));
     $shippingAddress->setZipCode($order_info['s_zipcode']);
     $shippingAddress->setCity($order_info['s_city']);
     $shippingAddress->setCountryCode($order_info['s_country']);
     $order->setDeliveryAddress($shippingAddress);
 
     // Billing address
-    $b_address = splitAddress(trim($order_info['b_address'] . ' ' . $order_info['b_address_2']));
+    $b_address = paynl_split_address(trim($order_info['b_address'] . ' ' . $order_info['b_address_2']));
     $billingAddress = new \PayNL\Sdk\Model\Address();
     $billingAddress->setCode('invoice');
-    $billingAddress->setStreetName($b_address[0]);
-    $billingAddress->setStreetNumber(substr($b_address[1], 0, 4));
+    $billingAddress->setStreetName($b_address['street']);
+    $billingAddress->setStreetNumber(substr($b_address['number'], 0, 4));
     $billingAddress->setZipCode($order_info['b_zipcode']);
     $billingAddress->setCity($order_info['b_city']);
     $billingAddress->setCountryCode($order_info['b_country']);
@@ -309,23 +309,6 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         fn_set_notification('E', __('error'), $ex->getMessage());
         fn_redirect('/index.php?dispatch=checkout.checkout');
     }
-}
-
-function splitAddress($strAddress)
-{
-    $strAddress = trim($strAddress);
-    $a = preg_split('/([0-9]+)/', $strAddress, 2, PREG_SPLIT_DELIM_CAPTURE);
-    $strStreetName = trim(array_shift($a));
-    $strStreetNumber = trim(implode('', $a));
-
-    if (empty($strStreetName)) { // American address notation
-        $a = preg_split('/([a-zA-Z]{2,})/', $strAddress, 2, PREG_SPLIT_DELIM_CAPTURE);
-
-        $strStreetNumber = trim(implode('', $a));
-        $strStreetName = trim(array_shift($a));
-    }
-
-    return array($strStreetName, $strStreetNumber);
 }
 
 //calculate incl and excl tax for a product
