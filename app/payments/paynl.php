@@ -1,11 +1,12 @@
 <?php
 
 /**
- *    PAY.
+ *    Pay.
  *    Date: 11-06-2021
  *    Version: 1.0.7
  */
 use Tygh\Registry;
+use PayNL\Sdk\Util\Exchange;
 
 if (!defined('BOOTSTRAP')) {
     die('Access denied');
@@ -16,53 +17,110 @@ if (defined('PAYMENT_NOTIFICATION')) {
     $order_info = null;
     $orderId = intval($_REQUEST['csCartOrderId']);
 
+    $order_info = fn_get_order_info($orderId, true);
+    $processor_data = fn_get_processor_data($order_info['payment_id']);
+    $statuses = $processor_data['processor_params']['statuses'];
+
     if ($mode == 'finish') {
+        if (in_array($order_info['status'], ['I', 'D'])) {
+            $pp_response = [];
+            $pp_response['reason_text'] = $order_info['status'] == 'I'
+                ? 'The payment has been cancelled, please try again '
+                : 'Unfortunately the payment has been denied. Please try again or use another payment method. ';
+            fn_finish_payment($orderId, $pp_response);
+        }
+
         fn_order_placement_routines('route', $orderId, false);
         die();
     }
 
-    $action = $_REQUEST['action'] ?? '';
-    $payNLTransactionID = $_REQUEST['order_id'] ?? '';
-    if ($action == 'pending' || $action == 'refund:received' || empty($action) || empty($payNLTransactionID)) {
-        die('TRUE|Ignoring ' . (empty($payNLTransactionID) ? ', no order id' : $action));
-    }
-
-    $order_info = fn_get_order_info($orderId, true);
-    $csCartOrderAmount = (int)str_replace('.', '', $order_info['total']);
-    $processor_data = fn_get_processor_data($order_info['payment_id']);
-    $statuses = $processor_data['processor_params']['statuses'];
-
     if ($mode == 'exchange') {
-        # Retrieve PAY.-data
-        $payData = fn_paynl_getStatus($payNLTransactionID, $processor_data);
-        $alreadyPaid = fn_isAlreadyPAID($payNLTransactionID) || $order_info['status'] == 'P';
+        try {
+            $config = getConfig(getTokencode(), getApiToken());
 
-        if ($alreadyPaid) {
-            die('TRUE|Order already PAID');
-        }
-        $payAmount = (int)$payData['paymentDetails']['amountOriginal']['value'];
-        $state = Pay_Helper::getStateText($payData['paymentDetails']['state']);
-        $bPaid = in_array($state, array(Pay_Helper::PAYMENT_AUTHORIZE, Pay_Helper::PAYMENT_PAID));
+            $exchange = new Exchange();
+            $payOrder = $exchange->process($config);
 
-        if ($bPaid && $payAmount !== $csCartOrderAmount) {
-            die('TRUE|Failed, invalid amounts: ' . $payAmount . ' vs ' . $csCartOrderAmount);
-        }
-
-        $idstate = $statuses[strtolower($state)];
-        if (!empty($idstate)) {
-            if (fn_check_payment_script('paynl.php', $orderId)) {
-                fn_change_order_status($orderId, $idstate);
+            $payOrderId = '';
+            try {
+                $payOrderId = $payOrder->getId();
+            } catch (Error $e) {
+                $payOrderId = $_REQUEST['object']['orderId'] ?? '';
             }
 
-            fn_updatePayTransaction($payNLTransactionID, $state);
+            $alreadyPaid = fn_isAlreadyPAID($payOrderId) || $order_info['status'] == 'P';
+            
+            $responseResult = true;
+            $responseMessage = 'Processed';
+            
+            if ($payOrder->isPending()) {
+                $responseResult = true;
+                $responseMessage = 'Processed pending';
+                $idstate = $statuses['pending'] ?? 'N';
+                
+            } elseif ($payOrder->isRefunded()) {
+                $responseResult = true;
+                $responseMessage = 'Ignoring refund';
 
-            if ($bPaid) {
-                $pp_response = array('order_status' => $idstate, 'naam' => $payData['paymentDetails']['identifierName'], 'rekening' => $payData['paymentDetails']['identifierPublic']);
+            } elseif ($alreadyPaid) {
+                $responseResult = true;
+                $responseMessage = 'Order already PAID';
+
+            } elseif ($payOrder->isPaid() || $payOrder->isAuthorized()) {
+                $responseMessage = 'Processed paid. Order: ' . $payOrder->getReference();
+                $idstate = $statuses['paid'] ?? $statuses['authorize'] ?? 'P';
+                
+                if (fn_check_payment_script('paynl.php', $orderId)) {
+                    fn_change_order_status($orderId, $idstate);
+                }
+                
+                fn_updatePayTransaction($payOrderId, $payOrder->isPaid() ? 'PAID' : 'AUTHORIZE');
+                
+                $pp_response = array(
+                    'order_status' => $idstate, 
+                    'naam' => $payOrder->getPaymentMethod(),
+                    'rekening' => $payOrder->getReference()
+                );
                 fn_finish_payment($orderId, $pp_response);
+                
+            } elseif ($payOrder->isCancelled()) {
+                $responseResult = true;
+                $responseMessage = 'Processed cancelled';
+                $idstate = $statuses['cancelled'] ?? 'I';
+                
+                if (fn_check_payment_script('paynl.php', $orderId)) {
+                    fn_change_order_status($orderId, $idstate);
+                }
+                fn_updatePayTransaction($payOrderId, 'CANCEL');
+            } elseif ($payOrder->isDenied()) {
+                $responseResult = true;
+                $responseMessage = 'Processed denied';
+                $idstate = 'D';
+
+                if (fn_check_payment_script('paynl.php', $orderId)) {
+                    fn_change_order_status($orderId, $idstate);
+                }
+                fn_updatePayTransaction($payOrderId, 'DENIED');
+            } elseif ($payOrder->isBeingVerified()) {
+                $responseResult = true;
+                $responseMessage = 'Processed verify';
+                $idstate = 'O';
+
+                if (fn_check_payment_script('paynl.php', $orderId)) {
+                    fn_change_order_status($orderId, $idstate);
+                }
+                fn_updatePayTransaction($payOrderId, 'VERIFY');
+            } else {
+                $responseResult = true;
+                $responseMessage = 'No action defined for payment state ' . $payOrder->getStatusCode();
             }
-            die('TRUE| Updated status to: ' . $state . ' state_id: ' . $idstate);
+            
+            $exchange->setResponse($responseResult, $responseMessage);
+            
+        } catch (Throwable $exception) {
+            $exchange = new Exchange();
+            $exchange->setResponse(false, $exception->getMessage());
         }
-        die('TRUE| unknown status ' . $state);
     }
 } else {
     # Create the transaction

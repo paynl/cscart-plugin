@@ -1,9 +1,17 @@
 <?xml version="1.0"?>
 <addon scheme="2.0">
 	<id>paynl_addon</id>
-	<name>PAY.</name>
-	<description>PAY. Gateway addon</description>
-	<version>1.2.1</version>
+	<name>Pay.</name>
+	<description>Pay. Gateway addon</description>
+	<version>2.0.0</version>
+    <compatibility>
+        <core_version>
+            <min>4.17.1</min>
+        </core_version>
+        <php_version>
+            <min>8.1</min>
+        </php_version>
+    </compatibility>
 	<priority>1000</priority>
         <settings layout="separate">
           <sections>
@@ -13,15 +21,26 @@
                     <type>header</type>
                     <name>Setting</name>
                   </item>
+                  <item id="token_code">
+                    <name>Token code</name>
+                    <type>input</type>
+                    <tooltip>
+                        The AT-code belonging to your API token, you can find this here: https://admin.pay.nl/company/tokens. The token code should be in the following format: AT-xxxx-xxxx</tooltip>
+                  </item>
                   <item id="service_id">
                     <name>Service id</name>
                     <type>input</type>
-                    <tooltip>The serviceid to identify your website, you can find your serviceid https://admin.pay.nl/programs/programs The serviceid should be in the following format: SL-xxxx-xxxx</tooltip>
+                    <tooltip>The serviceid to identify your website, you can find your serviceid https://admin.pay.nl/programs/programs. The service id should be in the following format: SL-xxxx-xxxx</tooltip>
                   </item>
                   <item id="token_api">
-                    <name>token </name>
+                    <name>API token</name>
                     <type>input</type>
-                    <tooltip>The api token used to communicate with the PAY. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
+                    <tooltip>The api token used to communicate with the Pay. API, you can find your token https://admin.pay.nl/my_merchant</tooltip>
+                  </item>
+                  <item id="test_mode">
+                    <name>Test mode</name>
+                    <type>checkbox</type>
+                    <tooltip>Enable to start transactions in test mode </tooltip>
                   </item>
                 </items>
               </section>
@@ -46,7 +65,7 @@
        <item for="install">DELETE FROM ?:payment_processors WHERE processor = 'Pay.nl'</item> 
        <item for="install">
         INSERT INTO `?:payment_processors` (`processor_id`, `processor`, `processor_script`, `processor_template`, `admin_template`, `callback`, `type`) VALUES 
-        ('', 'Pay.nl', 'paynl.php', 'views/orders/components/payments/paynl.tpl', 'paynlview.tpl', 'Y', 'P') 
+        ('', 'Pay.nl', 'paynl.php', 'views/orders/components/payments/empty.tpl', 'paynlview.tpl', 'Y', 'P')
        </item>
         <item for="uninstall">DELETE FROM ?:payments WHERE processor_id IN (SELECT processor_id FROM ?:payment_processors WHERE processor = 'Pay.nl')</item>                
 	<item for="uninstall">DELETE FROM ?:payment_processors WHERE processor = 'Pay.nl'</item> 
