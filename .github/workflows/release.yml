@@ -16,11 +16,12 @@ jobs:
       - name: Build zip
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
           zip -r "cscart_${VERSION}.zip" app design -x '.github/*'
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: "cscart_${{ github.ref_name#v }}.zip"
+          files: "cscart_${{ env.VERSION }}.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
