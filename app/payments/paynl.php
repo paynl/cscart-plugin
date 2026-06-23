@@ -22,6 +22,14 @@ if (defined('PAYMENT_NOTIFICATION')) {
     $statuses = $processor_data['processor_params']['statuses'];
 
     if ($mode == 'finish') {
+        $payOrderId = trim(strip_tags((string) ($_GET['id'] ?? '')));
+
+        if (empty($payOrderId) || !fn_paynl_verifyOrderBelongsToPay($orderId, $payOrderId)) {
+            fn_set_notification('E', '', 'Invalid payment.');
+            fn_redirect('checkout.cart');
+            die();
+        }
+
         if (in_array($order_info['status'], ['I', 'D'])) {
             $pp_response = [];
             $pp_response['reason_text'] = $order_info['status'] == 'I'
@@ -43,7 +51,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
 
             $payOrderId = '';
             try {
-                $payOrderId = $payOrder->getId();
+                $payOrderId = $payOrder->getOrderId();
             } catch (Error $e) {
                 $payOrderId = $_REQUEST['object']['orderId'] ?? '';
             }
@@ -154,6 +162,16 @@ if (defined('PAYMENT_NOTIFICATION')) {
     }
 
     die;
+}
+
+function fn_paynl_verifyOrderBelongsToPay($orderId, $payOrderId)
+{
+    $linkedOrderId = db_get_field(
+        'SELECT order_id FROM ?:paynl_transactions WHERE transaction_id = ?s AND order_id = ?i',
+        $payOrderId,
+        $orderId
+    );
+    return !empty($linkedOrderId);
 }
 
 function fn_updatePayTransaction($transactionId, $status)

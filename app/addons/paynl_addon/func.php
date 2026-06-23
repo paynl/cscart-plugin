@@ -298,7 +298,7 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
         // Return data in format expected by existing code
         return array(
             'transaction' => array(
-                'transactionId' => $payOrder->getId(),
+                'transactionId' => $payOrder->getOrderId(),
                 'paymentURL' => $payOrder->getPaymentUrl(),
                 'popupAllowed' => false,
                 'popupHeight' => 0,
