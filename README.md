@@ -30,7 +30,7 @@ Bank Transfer |       Nexi       | GivaCard |        |  |
 # Requirements
 
     Minimum PHP Version: PHP 8.1
-    Tested up to CSCart 4.17.1
+    Tested up to CSCart 4.20.1
 
 
 # Installation
