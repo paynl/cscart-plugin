@@ -48,15 +48,19 @@ if (defined('PAYMENT_NOTIFICATION')) {
 
             $exchange = new Exchange();
             $payOrder = $exchange->process($config);
+            $payOrderId = $exchange->getPayOrderId();
 
-            $payOrderId = '';
-            try {
-                $payOrderId = $payOrder->getOrderId();
-            } catch (Error $e) {
-                $payOrderId = $_REQUEST['object']['orderId'] ?? '';
+            if (empty($payOrderId)) {
+                $exchange->setResponse(false, 'Invalid payment');
             }
 
-            if (empty($payOrderId) || !fn_paynl_verifyOrderBelongsToPay($orderId, $payOrderId)) {
+            // PAY. can send the pending exchange before the transaction has been stored locally.
+            // Pending does not change the order or transaction, so it is safe to acknowledge it here.
+            if ($payOrder->isPending()) {
+                $exchange->setResponse(true, 'Processed pending');
+            }
+
+            if (!fn_paynl_verifyOrderBelongsToPay($orderId, $payOrderId)) {
                 $exchange->setResponse(false, 'Invalid payment');
             }
 
@@ -65,12 +69,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
             $responseResult = true;
             $responseMessage = 'Processed';
             
-            if ($payOrder->isPending()) {
-                $responseResult = true;
-                $responseMessage = 'Processed pending';
-                $idstate = $statuses['pending'] ?? 'N';
-                
-            } elseif ($payOrder->isRefunded()) {
+            if ($payOrder->isRefunded()) {
                 $responseResult = true;
                 $responseMessage = 'Ignoring refund';
 
