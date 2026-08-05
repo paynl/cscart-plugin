@@ -56,6 +56,10 @@ if (defined('PAYMENT_NOTIFICATION')) {
                 $payOrderId = $_REQUEST['object']['orderId'] ?? '';
             }
 
+            if (empty($payOrderId) || !fn_paynl_verifyOrderBelongsToPay($orderId, $payOrderId)) {
+                $exchange->setResponse(false, 'Invalid payment');
+            }
+
             $alreadyPaid = fn_isAlreadyPAID($payOrderId) || $order_info['status'] == 'P';
             
             $responseResult = true;
@@ -177,7 +181,7 @@ function fn_paynl_verifyOrderBelongsToPay($orderId, $payOrderId)
 function fn_updatePayTransaction($transactionId, $status)
 {
     $data = array('status' => $status, 'last_update' => date('Y-m-d H:i:s'));
-    db_query('UPDATE ?:paynl_transactions SET ?u WHERE transaction_id = ?i', $data, $transactionId);
+    db_query('UPDATE ?:paynl_transactions SET ?u WHERE transaction_id = ?s', $data, $transactionId);
 }
 
 function fn_isAlreadyPAID($transactionID)
