@@ -44,7 +44,10 @@ if (defined('PAYMENT_NOTIFICATION')) {
 
     if ($mode == 'exchange') {
         try {
-            $config = getConfig(getTokencode(), getApiToken());
+            $tokenCode = !empty($processor_data['processor_params']['tokenCode']) ? $processor_data['processor_params']['tokenCode'] : getTokencode();
+            $apiToken = !empty($processor_data['processor_params']['apiToken']) ? $processor_data['processor_params']['apiToken'] : getApiToken();
+
+            $config = getConfig($tokenCode, $apiToken);
 
             $exchange = new Exchange();
             $payOrder = $exchange->process($config);

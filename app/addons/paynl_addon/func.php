@@ -25,14 +25,17 @@ function getConfig($tokenCode = null, $apiToken = null, $useCore = false, $core 
 }
 
 /**
+ * @param string|null $tokenCode
+ * @param string|null $apiToken
+ * @param string|null $serviceId
  * @return array
  */
-function fn_getPaymentMethods()
+function fn_getPaymentMethods($tokenCode = null, $apiToken = null, $serviceId = null)
 {
     try {
-        $serviceId = getServiceId();
-        $tokenCode = getTokencode();
-        $apiToken = getApiToken();
+        $serviceId = !empty($serviceId) ? $serviceId : getServiceId();
+        $tokenCode = !empty($tokenCode) ? $tokenCode : getTokencode();
+        $apiToken = !empty($apiToken) ? $apiToken : getApiToken();
 
         $config = getConfig($tokenCode, $apiToken);
 
@@ -138,12 +141,16 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
 {
     $currency = CART_PRIMARY_CURRENCY;
 
-    $config = getConfig(getTokencode(), getApiToken(), true, $processor_data['processor_params']['multicore']);
+    $tokenCode = !empty($processor_data['processor_params']['tokenCode']) ? $processor_data['processor_params']['tokenCode'] : getTokencode();
+    $serviceId = !empty($processor_data['processor_params']['serviceId']) ? $processor_data['processor_params']['serviceId'] : getServiceId();
+    $apiToken = !empty($processor_data['processor_params']['apiToken']) ? $processor_data['processor_params']['apiToken'] : getApiToken();
+
+    $config = getConfig($tokenCode, $apiToken, true, $processor_data['processor_params']['multicore']);
     
     // Create the order request
     $request = new \PayNL\Sdk\Model\Request\OrderCreateRequest();
     $request->setConfig($config);
-    $request->setServiceId(getServiceId());
+    $request->setServiceId($serviceId);
     $request->setAmount(floatval($order_info['total']));
     $request->setTestmode(getTestMode());
     $request->setCurrency($currency);
@@ -559,4 +566,18 @@ function fn_paynl_getMultiCore()
         fn_set_notification('E', __('error'), 'Could not fetch TGU cores: ' . $ex->getMessage());
         return array();
     }
+}
+
+/**
+ * @return array
+ */
+function fn_paynl_getCredentials()
+{
+    $credentials = array(
+        'serviceId' => getServiceId(),
+        'tokenCode' => getTokencode(),
+        'apiToken' => getApiToken()
+    );
+
+    return $credentials;
 }
