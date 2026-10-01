@@ -48,10 +48,23 @@ function fn_getPaymentMethods($tokenCode = null, $apiToken = null, $serviceId = 
             $formattedMethods = array();
 
             foreach ($paymentMethods as $method) {
-                $formattedMethods[] = array(
+                $formattedMethod = array(
                     'id' => $method->getId(),
-                    'name' => $method->getName()
+                    'name' => $method->getName(),
                 );
+
+                if ($method->getId() == 5358) {
+                    $issuers = array();
+                    foreach ($method->getOptions() as $bank) {
+                        $issuers[] = array(
+                            'id' => $bank['issuerId'],
+                            'name' => $bank['name'],
+                        );
+                    }
+                    $formattedMethod['issuers'] = $issuers;
+                }
+
+                $formattedMethods[] = $formattedMethod;
             }
 
         } catch (Exception $ex) {
@@ -82,6 +95,40 @@ function fn_get_ideal_banks($processor_data)
     } catch (Exception $ex) {
         fn_set_notification('E', __('error'), $ex->getMessage());
     }
+}
+
+/**
+ * @param $payment_id
+ * @return array
+ */
+function fn_paynl_get_checkout_banks($payment_id = null)
+{
+    if (empty($payment_id)) {
+        $payment_id = isset($_SESSION['cart']['payment_id']) ? $_SESSION['cart']['payment_id'] : null;
+    }
+
+    if (empty($payment_id)) {
+        return array();
+    }
+
+    $processor_data = fn_get_processor_data($payment_id);
+    $processor_params = isset($processor_data['processor_params']) ? $processor_data['processor_params'] : array();
+
+    if (
+        empty($processor_params['optionId'])
+        || (string) $processor_params['optionId'] !== '5358'
+        || empty($processor_params['enableBankSelection'])
+        || (string) $processor_params['enableBankSelection'] !== '1'
+        || empty($processor_params['issuers'])
+    ) {
+        return array();
+    }
+
+    $issuers = is_array($processor_params['issuers'])
+        ? $processor_params['issuers']
+        : json_decode($processor_params['issuers'], true);
+
+    return is_array($issuers) ? $issuers : array();
 }
 
 /**
@@ -137,7 +184,7 @@ function getObjectData()
  * @return array|void
  * @throws Exception
  */
-function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl)
+function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl, $paymentOptionSubId = null)
 {
     $currency = CART_PRIMARY_CURRENCY;
 
@@ -158,6 +205,10 @@ function fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exc
     $request->setExchangeUrl($exchangeUrl);
     $request->setDescription($order_info['order_id']);
     $request->setReference($order_info['order_id']);
+
+    if (!empty($paymentOptionSubId)) {
+        $request->setPaymentInputData(['issuerId' => $paymentOptionSubId]);
+    }
 
     if (!empty($processor_data['processor_params']['optionId'])) {
         $request->setPaymentMethodId((int)$processor_data['processor_params']['optionId']);

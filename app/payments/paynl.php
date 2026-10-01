@@ -145,7 +145,7 @@ if (defined('PAYMENT_NOTIFICATION')) {
 
     $exchangeUrl = fn_url("payment_notification.exchange?payment=paynl&csCartOrderId=$order_id", AREA, 'current');
     $finishUrl = fn_url("payment_notification.finish?payment=paynl&csCartOrderId=$order_id", AREA, 'current');
-    $result = fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl);
+    $result = fn_paynl_startTransaction($order_id, $order_info, $processor_data, $exchangeUrl, $finishUrl, $paymentOptionSub);
     $data = array(
         'transaction_id' => $result['transaction']['transactionId'],
         'option_id' => $processor_data['processor_params']['optionId'],
