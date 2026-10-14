@@ -5,6 +5,28 @@
 <p/>
 
 <script type="text/javascript">
+var payNLPaymentMethods = [];
+
+function updateIssuers(){
+    var selectedId = jQuery('#payNL_option').val();
+    var issuersJson = '';
+    if (selectedId == '5358') {
+        jQuery.each(payNLPaymentMethods, function(key, method){
+            if (String(method.id) == '5358' && method.issuers) {
+                issuersJson = JSON.stringify(method.issuers);
+                return false;
+            }
+        });
+    }
+    jQuery('#payNL_issuers').val(issuersJson);
+}
+
+function toggleBankSelection(){
+    var isMetjebank = jQuery('#payNL_option').val() == '5358';
+    jQuery('#payNL_bankSelection_row').toggle(isMetjebank);
+    updateIssuers();
+}
+
 function getPaymentProfiles(){
     var tokenCode = jQuery('#payNL_tokenCode').val();
     var serviceId = jQuery('#payNL_serviceId').val();
@@ -23,24 +45,32 @@ function getPaymentProfiles(){
             },
             success: function(data){
                 if (data.paymentMethods && data.paymentMethods.length) {
+                    payNLPaymentMethods = data.paymentMethods;
                     var options = '<option value="">Select payment method...</option>';
                     jQuery.each(data.paymentMethods, function(key, method){
                         options += "<option value='"+method.id+"'>"+method.name+"</option>";
                     });
                     jQuery('#payNL_option').html(options);
                     jQuery('#payNL_option').val(selectedOption);
+                    toggleBankSelection();
                 } else {
+                    payNLPaymentMethods = [];
                     jQuery('#payNL_option').html('<option>Please check credentials</option>');
+                    updateIssuers();
                 }
             },
             error: function(){
+                payNLPaymentMethods = [];
                 jQuery('#payNL_option').html('<option>Please check credentials</option>');
+                updateIssuers();
             }
         });
     }
 }
 jQuery(document).ready(function(){
     getPaymentProfiles();
+    jQuery('#payNL_option').on('change', toggleBankSelection);
+    toggleBankSelection();
 });
 </script>
 
@@ -95,6 +125,20 @@ jQuery(document).ready(function(){
     </div>
 </div>
 
+{* subOptions *}
+<input type="hidden" name="payment_data[processor_params][issuers]" value="" id="payNL_issuers" />
+
+{* Bank selection*}
+<div class="form-field" id="payNL_bankSelection_row" {if !isset($processor_params.optionId) || $processor_params.optionId != '5358'}style="display:none;"{/if}>
+    <label for="payNL_enableBankSelection">Enable bank selection in checkout:</label>
+    <div class="control-group">
+        <select name="payment_data[processor_params][enableBankSelection]" id="payNL_enableBankSelection">
+            <option value="0">No</option>
+            <option value="1" {if isset($processor_params.enableBankSelection) && $processor_params.enableBankSelection == '1'}selected="selected"{/if}>Yes</option>
+        </select>
+    </div>
+</div>
+
 {assign var="statuses" value=$smarty.const.STATUSES_ORDER|fn_get_simple_statuses}
 
 <div class="form-field">
@@ -143,7 +187,6 @@ jQuery(document).ready(function(){
                 {/foreach}
         </select>
 </div>
-
       
         
         
